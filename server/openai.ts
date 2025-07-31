@@ -19,17 +19,17 @@ interface FileAnalysis {
 }
 
 export class OpenAIService {
-  // List of models to try in order of preference (focusing on basic models)
+  // List of models to try in order of preference (using your specific models)
   private getModelsToTry(mode: AIMode): string[] {
     switch (mode) {
       case "fast":
-        return ["gpt-3.5-turbo-0125", "gpt-3.5-turbo-1106", "gpt-3.5-turbo-16k", "gpt-3.5-turbo"];
+        return ["gpt-4.1-nano-2025-04-14"];
       case "auto":
       case "expert":
       case "heavy":
-        return ["gpt-4-0125-preview", "gpt-4-1106-preview", "gpt-4", "gpt-3.5-turbo-0125", "gpt-3.5-turbo"];
+        return ["gpt-4.1-mini-2025-04-14", "gpt-4.1-nano-2025-04-14"];
       default:
-        return ["gpt-3.5-turbo-0125", "gpt-3.5-turbo-1106", "gpt-3.5-turbo"];
+        return ["gpt-4.1-nano-2025-04-14"];
     }
   }
 
@@ -109,7 +109,7 @@ export class OpenAIService {
   }
 
   async analyzeImage(base64Image: string, prompt?: string): Promise<string> {
-    const visionModels = ["gpt-4o", "gpt-4-vision-preview", "gpt-4-turbo"];
+    const visionModels = ["gpt-4.1-mini-2025-04-14", "gpt-4.1-nano-2025-04-14"];
     
     for (const model of visionModels) {
       try {
