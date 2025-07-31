@@ -19,16 +19,17 @@ interface FileAnalysis {
 }
 
 export class OpenAIService {
-  private getModelForMode(mode: AIMode): string {
+  // List of models to try in order of preference
+  private getModelsToTry(mode: AIMode): string[] {
     switch (mode) {
       case "fast":
-        return "gpt-3.5-turbo"; // Faster, more cost-effective
+        return ["gpt-4o-mini", "gpt-3.5-turbo", "gpt-3.5-turbo-0125", "gpt-4", "gpt-4-turbo-preview"];
       case "auto":
       case "expert":
       case "heavy":
-        return "gpt-4"; // Most capable available model
+        return ["gpt-4o", "gpt-4", "gpt-4-turbo-preview", "gpt-3.5-turbo", "gpt-3.5-turbo-0125"];
       default:
-        return "gpt-3.5-turbo";
+        return ["gpt-4o-mini", "gpt-3.5-turbo", "gpt-3.5-turbo-0125", "gpt-4", "gpt-4-turbo-preview"];
     }
   }
 
@@ -54,71 +55,103 @@ export class OpenAIService {
     mode: AIMode = "fast",
     fileAnalyses?: FileAnalysis[]
   ): Promise<string> {
-    try {
-      const model = this.getModelForMode(mode);
-      const systemPrompt = this.getSystemPrompt(mode);
+    const modelsToTry = this.getModelsToTry(mode);
+    const systemPrompt = this.getSystemPrompt(mode);
 
-      // Prepare messages with system prompt
-      const conversationMessages: ChatMessage[] = [
-        { role: "system", content: systemPrompt },
-        ...messages
-      ];
+    // Prepare messages with system prompt
+    const conversationMessages: ChatMessage[] = [
+      { role: "system", content: systemPrompt },
+      ...messages
+    ];
 
-      // Add file analysis context if provided
-      if (fileAnalyses && fileAnalyses.length > 0) {
-        const fileContext = fileAnalyses.map(file => 
-          `File: ${file.filename} (${file.mimeType})\nContent: ${file.content.slice(0, 2000)}...`
-        ).join("\n\n");
-        
-        conversationMessages.splice(1, 0, {
-          role: "system",
-          content: `You have access to the following uploaded files:\n\n${fileContext}\n\nUse this information to provide more accurate and contextual responses.`
-        });
-      }
-
-      const response = await openai.chat.completions.create({
-        model,
-        messages: conversationMessages,
-        temperature: mode === "fast" ? 0.7 : mode === "heavy" ? 0.3 : 0.5,
-        max_tokens: mode === "heavy" ? 4000 : mode === "fast" ? 1000 : 2000,
+    // Add file analysis context if provided
+    if (fileAnalyses && fileAnalyses.length > 0) {
+      const fileContext = fileAnalyses.map(file => 
+        `File: ${file.filename} (${file.mimeType})\nContent: ${file.content.slice(0, 2000)}...`
+      ).join("\n\n");
+      
+      conversationMessages.splice(1, 0, {
+        role: "system",
+        content: `You have access to the following uploaded files:\n\n${fileContext}\n\nUse this information to provide more accurate and contextual responses.`
       });
-
-      return response.choices[0].message.content || "I apologize, but I couldn't generate a response. Please try again.";
-    } catch (error) {
-      console.error("OpenAI API error:", error);
-      throw new Error("Failed to generate AI response. Please check your API key and try again.");
     }
+
+    // Try models in order until one works
+    for (const model of modelsToTry) {
+      try {
+        console.log(`Attempting to use model: ${model}`);
+        
+        const response = await openai.chat.completions.create({
+          model,
+          messages: conversationMessages,
+          temperature: mode === "fast" ? 0.7 : mode === "heavy" ? 0.3 : 0.5,
+          max_tokens: mode === "heavy" ? 4000 : mode === "fast" ? 1000 : 2000,
+        });
+
+        console.log(`Successfully used model: ${model}`);
+        return response.choices[0].message.content || "I apologize, but I couldn't generate a response. Please try again.";
+      } catch (error: any) {
+        console.log(`Model ${model} failed:`, error.message);
+        
+        // If this is not a model access error, throw it
+        if (!error.message?.includes('does not have access to model') && !error.code?.includes('model_not_found')) {
+          console.error("OpenAI API error:", error);
+          throw new Error("Failed to generate AI response. Please check your API key and try again.");
+        }
+        
+        // Continue to try the next model
+        continue;
+      }
+    }
+    
+    // If all models failed
+    throw new Error("No available AI models found. Please check your OpenAI API key permissions.");
   }
 
   async analyzeImage(base64Image: string, prompt?: string): Promise<string> {
-    try {
-      const response = await openai.chat.completions.create({
-        model: "gpt-4o",
-        messages: [
-          {
-            role: "user",
-            content: [
-              {
-                type: "text",
-                text: prompt || "Analyze this image in detail and describe its key elements, context, and any notable aspects."
-              },
-              {
-                type: "image_url",
-                image_url: {
-                  url: `data:image/jpeg;base64,${base64Image}`
+    const visionModels = ["gpt-4o", "gpt-4-vision-preview", "gpt-4-turbo"];
+    
+    for (const model of visionModels) {
+      try {
+        console.log(`Attempting image analysis with model: ${model}`);
+        
+        const response = await openai.chat.completions.create({
+          model,
+          messages: [
+            {
+              role: "user",
+              content: [
+                {
+                  type: "text",
+                  text: prompt || "Analyze this image in detail and describe its key elements, context, and any notable aspects."
+                },
+                {
+                  type: "image_url",
+                  image_url: {
+                    url: `data:image/jpeg;base64,${base64Image}`
+                  }
                 }
-              }
-            ],
-          },
-        ],
-        max_tokens: 1000,
-      });
+              ],
+            },
+          ],
+          max_tokens: 1000,
+        });
 
-      return response.choices[0].message.content || "I couldn't analyze this image. Please try again.";
-    } catch (error) {
-      console.error("Image analysis error:", error);
-      throw new Error("Failed to analyze image. Please try again.");
+        console.log(`Successfully analyzed image with model: ${model}`);
+        return response.choices[0].message.content || "I couldn't analyze this image. Please try again.";
+      } catch (error: any) {
+        console.log(`Image analysis model ${model} failed:`, error.message);
+        
+        if (!error.message?.includes('does not have access to model') && !error.code?.includes('model_not_found')) {
+          console.error("Image analysis error:", error);
+          throw new Error("Failed to analyze image. Please try again.");
+        }
+        
+        continue;
+      }
     }
+    
+    throw new Error("No vision models available for image analysis. Please check your OpenAI API key permissions.");
   }
 
   async analyzeDocument(content: string, filename: string, mimeType: string): Promise<string> {
