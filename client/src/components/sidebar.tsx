@@ -150,8 +150,8 @@ export default function Sidebar({ isOpen, onClose, currentConversationId }: Side
               conversations.map((conversation) => (
                 <div key={conversation.id} className="group relative">
                   <Link href={`/chat/${conversation.id}`}>
-                    <button className={cn(
-                      "w-full text-left p-3 rounded-lg hover:bg-gray-700 transition-colors",
+                    <div className={cn(
+                      "w-full text-left p-3 rounded-lg hover:bg-gray-700 transition-colors cursor-pointer",
                       currentConversationId === conversation.id && "bg-gray-700"
                     )}>
                       <div className="flex items-center justify-between">
@@ -178,7 +178,7 @@ export default function Sidebar({ isOpen, onClose, currentConversationId }: Side
                           </button>
                         </div>
                       </div>
-                    </button>
+                    </div>
                   </Link>
                 </div>
               ))

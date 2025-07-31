@@ -22,13 +22,13 @@ export class OpenAIService {
   private getModelForMode(mode: AIMode): string {
     switch (mode) {
       case "fast":
-        return "gpt-4o-mini"; // Faster, more cost-effective
+        return "gpt-3.5-turbo"; // Faster, more cost-effective
       case "auto":
       case "expert":
       case "heavy":
-        return "gpt-4o"; // Latest and most capable model
+        return "gpt-4"; // Most capable available model
       default:
-        return "gpt-4o";
+        return "gpt-3.5-turbo";
     }
   }
 
