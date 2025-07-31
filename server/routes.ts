@@ -275,10 +275,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
           });
           
           console.error("AI response error:", aiError);
-          res.status(500).json({ 
-            message: "Failed to generate AI response",
-            userMessage 
-          });
+          
+          // Create a fallback response instead of failing completely
+          const fallbackResponse = "I apologize, but I'm currently experiencing technical difficulties with my AI models. Please check your OpenAI API key has access to at least one of these models: gpt-3.5-turbo, gpt-4, or contact support for assistance.";
+          
+          try {
+            const aiMessage = await storage.createMessage({
+              conversationId,
+              role: 'assistant',
+              content: fallbackResponse,
+            });
+
+            // Send fallback message via WebSocket
+            clients.forEach((client) => {
+              if (client.userId !== userId && client.conversationId === conversationId && client.readyState === WebSocket.OPEN) {
+                client.send(JSON.stringify({
+                  type: 'new_message',
+                  message: aiMessage
+                }));
+              }
+            });
+
+            res.json({ userMessage, aiMessage });
+          } catch (fallbackError) {
+            console.error("Fallback message creation failed:", fallbackError);
+            res.status(500).json({ 
+              message: "Failed to generate AI response",
+              userMessage 
+            });
+          }
         }
       } else {
         res.json({ message: userMessage });

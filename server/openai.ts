@@ -19,17 +19,17 @@ interface FileAnalysis {
 }
 
 export class OpenAIService {
-  // List of models to try in order of preference
+  // List of models to try in order of preference (focusing on basic models)
   private getModelsToTry(mode: AIMode): string[] {
     switch (mode) {
       case "fast":
-        return ["gpt-4o-mini", "gpt-3.5-turbo", "gpt-3.5-turbo-0125", "gpt-4", "gpt-4-turbo-preview"];
+        return ["gpt-3.5-turbo-0125", "gpt-3.5-turbo-1106", "gpt-3.5-turbo-16k", "gpt-3.5-turbo"];
       case "auto":
       case "expert":
       case "heavy":
-        return ["gpt-4o", "gpt-4", "gpt-4-turbo-preview", "gpt-3.5-turbo", "gpt-3.5-turbo-0125"];
+        return ["gpt-4-0125-preview", "gpt-4-1106-preview", "gpt-4", "gpt-3.5-turbo-0125", "gpt-3.5-turbo"];
       default:
-        return ["gpt-4o-mini", "gpt-3.5-turbo", "gpt-3.5-turbo-0125", "gpt-4", "gpt-4-turbo-preview"];
+        return ["gpt-3.5-turbo-0125", "gpt-3.5-turbo-1106", "gpt-3.5-turbo"];
     }
   }
 
