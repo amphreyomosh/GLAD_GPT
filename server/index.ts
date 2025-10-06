@@ -33,6 +33,11 @@ app.use(cors({ origin: allowedOrigins.length ? allowedOrigins : true, credential
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
+// Health check endpoint
+app.get('/health', (req, res) => {
+  res.status(200).json({ status: 'ok' });
+});
+
 // Serve static files from the client/dist directory in production
 if (process.env.NODE_ENV === 'production') {
   const clientDistPath = path.join(process.cwd(), 'client', 'dist');
