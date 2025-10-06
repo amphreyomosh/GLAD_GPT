@@ -1,13 +1,39 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { WebSocketServer, WebSocket } from "ws";
-import { storage } from "./storage";
-import { setupAuth, isAuthenticated } from "./replitAuth";
-import { openaiService } from "./openai";
-import { insertConversationSchema, insertMessageSchema } from "@shared/schema";
+import { storage } from "./storage.js";
+import { setupAuth, isAuthenticated } from "./auth.js";
+import { enhancedOpenAIService } from "./openai.js";
+import { insertConversationSchema, insertMessageSchema } from "../shared/schema.js";
 import multer from "multer";
-import fs from "fs/promises";
-import path from "path";
+import fs from "node:fs/promises";
+import path from "node:path";
+import { fileURLToPath } from 'node:url';
+import { verifyFirebaseToken, enforceChatAttempts, incrementAnonymousAttempt, recordChat } from "./firebaseAuth.js";
+
+// Simple in-memory storage for demo user chat sessions (in production, use a database)
+const demoUserChatSessions = new Map<string, Set<string>>();
+
+// Middleware to enforce chat limits for session-based authentication
+const enforceSessionChatAttempts = (req: any, res: any, next: any) => {
+  const user = req.user;
+  if (!user) {
+    return res.status(401).json({ message: "Unauthorized" });
+  }
+
+  // Only limit demo users (guest users) - but allow unlimited messages within their first chat
+  if (user.id === 'demo_user') {
+    // For chat messages, we don't limit - guests can chat as much as they want in their first session
+    // The limit will be enforced when creating new chats in the frontend
+    console.log('Demo user chatting - unlimited messages allowed within first chat session');
+  }
+
+  next();
+};
+
+// Get the current file's directory name in ES modules
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 // File upload configuration
 const upload = multer({
@@ -40,15 +66,28 @@ interface WebSocketClient extends WebSocket {
   conversationId?: string;
 }
 
-export async function registerRoutes(app: Express): Promise<Server> {
-  // Auth middleware
-  await setupAuth(app);
+export function registerRoutes(app: Express): void {
+  // Auth middleware - we'll call this without await since we can't make this function async
+  setupAuth(app).catch(err => {
+    console.error('Failed to set up auth:', err);
+  });
+
+  // Simple health check
+  app.get('/api/health', (_req, res) => {
+    res.json({ status: 'ok', time: new Date().toISOString() });
+  });
 
   // WebSocket setup
   const httpServer = createServer(app);
   const wss = new WebSocketServer({ server: httpServer, path: '/ws' });
   
   const clients = new Map<string, WebSocketClient>();
+  
+  // Start the WebSocket server on a different port
+  const wsPort = parseInt(process.env.WS_PORT || '5002', 10);
+  httpServer.listen(wsPort, '0.0.0.0', () => {
+    console.log(`WebSocket server running on ws://localhost:${wsPort}/ws`);
+  });
 
   wss.on('connection', (ws: WebSocketClient, req) => {
     console.log('WebSocket client connected');
@@ -89,22 +128,92 @@ export async function registerRoutes(app: Express): Promise<Server> {
     });
   });
 
-  // Auth routes
-  app.get('/api/auth/user', isAuthenticated, async (req: any, res) => {
+  // Auth routes are now handled in auth.ts
+
+  // Firebase-secured chat proxy
+  app.post('/api/chat', verifyFirebaseToken, enforceChatAttempts, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
-      const user = await storage.getUser(userId);
-      res.json(user);
-    } catch (error) {
-      console.error("Error fetching user:", error);
-      res.status(500).json({ message: "Failed to fetch user" });
+      const { message, mode, fileAnalyses } = req.body || {};
+      if (!message || typeof message !== 'string') {
+        return res.status(400).json({ message: 'Message is required' });
+      }
+
+      const uid: string = req.firebaseUser.uid;
+      const isAnonymous: boolean = !!req.isAnonymous;
+
+      const messages = [
+        { role: 'user' as const, content: message }
+      ];
+
+      const response = await enhancedOpenAIService.generateResponse(messages, mode || 'auto', fileAnalyses);
+      const ai = response.mainResponse;
+
+      // Record chat (optional)
+      await recordChat(uid, message, ai, mode);
+
+      // Increment attempts if anonymous
+      if (isAnonymous) {
+        await incrementAnonymousAttempt(uid);
+      }
+
+      return res.json({ reply: ai, metadata: { mode: mode || 'auto' } });
+    } catch (err) {
+      console.error('POST /api/chat error:', err);
+      return res.status(500).json({ message: 'Failed to process chat' });
+    }
+  });
+
+  // Session-based chat endpoint for backend authentication
+  app.post('/api/chat/session', isAuthenticated, enforceSessionChatAttempts, async (req: any, res) => {
+    try {
+      const { message, mode, fileAnalyses } = req.body || {};
+      if (!message || typeof message !== 'string') {
+        return res.status(400).json({ message: 'Message is required' });
+      }
+
+      const user = req.user;
+      const uid: string = user.id;
+      const isAnonymous: boolean = user.id === 'demo_user';
+
+      const messages = [
+        { role: 'user' as const, content: message }
+      ];
+
+      // Use faster model for simple queries to improve response time
+      const selectedMode = mode || 'fast'; // Default to fast mode for better response times
+      const response = await enhancedOpenAIService.generateResponse(messages, selectedMode, fileAnalyses);
+      const ai = response.mainResponse;
+
+      // Record chat (optional) - skip if Firebase not configured
+      try {
+        await recordChat(uid, message, ai, mode);
+      } catch (error) {
+        console.log('Chat recording skipped (Firebase not configured)');
+      }
+
+      // For demo users, we don't increment per message - they can chat unlimited within their first session
+      if (isAnonymous) {
+        console.log('Demo user message processed - no limits on messages within first chat');
+        
+        // Still try Firebase tracking if available (for analytics)
+        try {
+          await incrementAnonymousAttempt(uid);
+        } catch (error) {
+          console.log('Firebase attempt tracking skipped (not configured)');
+        }
+      }
+
+      return res.json({ reply: ai, metadata: { mode: mode || 'auto' } });
+    } catch (err) {
+      console.error('POST /api/chat/session error:', err);
+      return res.status(500).json({ message: 'Failed to process chat' });
     }
   });
 
   // Conversation routes
   app.get('/api/conversations', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user.id;
       const conversations = await storage.getConversations(userId);
       res.json(conversations);
     } catch (error) {
@@ -115,7 +224,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get('/api/conversations/:id', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user.id;
       const conversationId = req.params.id;
       const conversation = await storage.getConversation(conversationId, userId);
       
@@ -132,7 +241,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post('/api/conversations', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user.id;
       const validatedData = insertConversationSchema.parse({
         ...req.body,
         userId,
@@ -148,7 +257,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.patch('/api/conversations/:id', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user.id;
       const conversationId = req.params.id;
       
       // Verify ownership
@@ -167,7 +276,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.delete('/api/conversations/:id', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user.id;
       const conversationId = req.params.id;
       
       const deleted = await storage.deleteConversation(conversationId, userId);
@@ -185,7 +294,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Message routes
   app.post('/api/conversations/:id/messages', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user.id;
       const conversationId = req.params.id;
       
       // Verify conversation ownership
@@ -227,11 +336,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
           messages.push({ role: 'user', content });
 
           // Generate AI response
-          const aiResponse = await openaiService.generateResponse(
+          const enhancedResponse = await enhancedOpenAIService.generateResponse(
             messages,
             conversation.aiMode as any,
             fileAnalyses
           );
+          
+          const aiResponse = enhancedResponse.mainResponse;
 
           // Create AI message
           const aiMessage = await storage.createMessage({
@@ -277,7 +388,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           console.error("AI response error:", aiError);
           
           // Create a fallback response instead of failing completely
-          const fallbackResponse = "I apologize, but I'm currently experiencing technical difficulties with my AI models. Please check your OpenAI API key has access to at least one of these models: gpt-3.5-turbo, gpt-4, or contact support for assistance.";
+          const fallbackResponse = "I apologize, but I'm currently experiencing technical difficulties with my AI models. Please check your OpenAI API key has access to at least one of these models: gpt-4.1-nano-2025-04-14, gpt-4.1-mini-2025-04-14, or contact support for assistance.";
           
           try {
             const aiMessage = await storage.createMessage({
@@ -317,7 +428,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // File upload routes
   app.post('/api/upload', isAuthenticated, upload.array('files', 5), async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user.id;
       const files = req.files as Express.Multer.File[];
       
       if (!files || files.length === 0) {
@@ -349,7 +460,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           } else if (file.mimetype.startsWith('image/')) {
             const imageBuffer = await fs.readFile(file.path);
             const base64Image = imageBuffer.toString('base64');
-            content = await openaiService.analyzeImage(base64Image);
+            const imageAnalysis = await enhancedOpenAIService.analyzeImage(base64Image);
+            content = imageAnalysis.mainResponse;
           } else if (file.mimetype === 'application/pdf' || file.mimetype.includes('document')) {
             // For PDFs and documents, we'd normally use a PDF parser
             // For now, we'll indicate it's a document that needs processing
@@ -384,7 +496,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Search messages
   app.get('/api/search', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user.id;
       const query = req.query.q as string;
       
       if (!query) {
@@ -398,6 +510,4 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Search failed" });
     }
   });
-
-  return httpServer;
 }

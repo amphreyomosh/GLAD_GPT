@@ -13,7 +13,7 @@ import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 import { relations } from "drizzle-orm";
 
-// Session storage table for Replit Auth
+// Session storage table for authentication
 export const sessions = pgTable(
   "sessions",
   {
@@ -24,10 +24,11 @@ export const sessions = pgTable(
   (table) => [index("IDX_session_expire").on(table.expire)],
 );
 
-// User storage table for Replit Auth
+// User storage table for authentication
 export const users = pgTable("users", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   email: varchar("email").unique(),
+  password: varchar("password"),
   firstName: varchar("first_name"),
   lastName: varchar("last_name"),
   profileImageUrl: varchar("profile_image_url"),
@@ -40,7 +41,7 @@ export const conversations = pgTable("conversations", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   userId: varchar("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
   title: varchar("title").notNull(),
-  aiMode: varchar("ai_mode").notNull().default("fast"), // fast, auto, expert, heavy
+  aiMode: varchar("ai_mode").notNull().default("fast"), // fast, auto, expert, heavy, code_architect
   isPrivate: boolean("is_private").notNull().default(false),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
