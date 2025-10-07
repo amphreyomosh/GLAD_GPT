@@ -79,92 +79,99 @@ app.use((req, res, next) => {
   next();
 });
 
-// Register all API routes
-registerRoutes(app);
+async function startServer() {
+  // Register all API routes
+  await registerRoutes(app);
 
-// Error handling middleware
-app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
-  const status = err.status || err.statusCode || 500;
-  const message = err.message || "Internal Server Error";
+  // Error handling middleware
+  app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
+    const status = err.status || err.statusCode || 500;
+    const message = err.message || "Internal Server Error";
 
-  // Only send response if headers haven't been sent already
-  if (!res.headersSent) {
-    res.status(status).json({ message });
-  }
-  
-  console.error("Express error handler:", err);
-});
-
-// In development, we'll use Vite's dev server for the frontend
-// In production, we'll serve the built frontend files
-if (process.env.NODE_ENV === 'production') {
-  // In production, serve the built frontend
-  app.get('*', (req, res) => {
-    res.sendFile(path.join(process.cwd(), 'client', 'dist', 'index.html'));
-  });
-} else {
-  // In development, just return a simple message
-  app.get('*', (req, res) => {
-    if (!req.path.startsWith('/api')) {
-      res.send(`
-        <!DOCTYPE html>
-        <html>
-          <head>
-            <title>Development Server</title>
-            <style>
-              body { 
-                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-                line-height: 1.6;
-                color: #333;
-                max-width: 800px;
-                margin: 0 auto;
-                padding: 2rem;
-              }
-              h1 { color: #2c3e50; }
-              pre {
-                background: #f5f5f5;
-                padding: 1rem;
-                border-radius: 4px;
-                overflow-x: auto;
-              }
-              a { color: #3498db; text-decoration: none; }
-              a:hover { text-decoration: underline; }
-            </style>
-          </head>
-          <body>
-            <h1>GLAD GPT Development Server</h1>
-            <p>Welcome to the GLAD GPT backend server. The API is running and ready to handle requests.</p>
-            
-            <h2>Available Endpoints</h2>
-            <ul>
-              <li><code>GET /api/health</code> - Check server status</li>
-              <li><code>POST /api/chat</code> - Send a chat message</li>
-              <li><code>GET /api/conversations</code> - List conversations</li>
-            </ul>
-            
-            <h2>Frontend Development</h2>
-            <p>To run the frontend development server, open a new terminal and run:</p>
-            <pre>cd client && npm install && npm run dev</pre>
-            <p>Then open <a href="http://localhost:3000" target="_blank">http://localhost:3000</a> in your browser.</p>
-            
-            <h2>API Documentation</h2>
-            <p>For detailed API documentation, check the project's README or source code.</p>
-          </body>
-        </html>
-      `);
-    } else {
-      res.status(404).json({ message: 'Not Found' });
+    // Only send response if headers haven't been sent already
+    if (!res.headersSent) {
+      res.status(status).json({ message });
     }
+    
+    console.error("Express error handler:", err);
   });
+
+  // In development, we'll use Vite's dev server for the frontend
+  // In production, we'll serve the built frontend files
+  if (process.env.NODE_ENV === 'production') {
+    // In production, serve the built frontend
+    app.get('*', (req, res) => {
+      res.sendFile(path.join(process.cwd(), 'client', 'dist', 'index.html'));
+    });
+  } else {
+    // In development, just return a simple message
+    app.get('*', (req, res) => {
+      if (!req.path.startsWith('/api')) {
+        res.send(`
+          <!DOCTYPE html>
+          <html>
+            <head>
+              <title>Development Server</title>
+              <style>
+                body { 
+                  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+                  line-height: 1.6;
+                  color: #333;
+                  max-width: 800px;
+                  margin: 0 auto;
+                  padding: 2rem;
+                }
+                h1 { color: #2c3e50; }
+                pre {
+                  background: #f5f5f5;
+                  padding: 1rem;
+                  border-radius: 4px;
+                  overflow-x: auto;
+                }
+                a { color: #3498db; text-decoration: none; }
+                a:hover { text-decoration: underline; }
+              </style>
+            </head>
+            <body>
+              <h1>GLAD GPT Development Server</h1>
+              <p>Welcome to the GLAD GPT backend server. The API is running and ready to handle requests.</p>
+              
+              <h2>Available Endpoints</h2>
+              <ul>
+                <li><code>GET /api/health</code> - Check server status</li>
+                <li><code>POST /api/chat</code> - Send a chat message</li>
+                <li><code>GET /api/conversations</code> - List conversations</li>
+              </ul>
+              
+              <h2>Frontend Development</h2>
+              <p>To run the frontend development server, open a new terminal and run:</p>
+              <pre>cd client && npm install && npm run dev</pre>
+              <p>Then open <a href="http://localhost:3000" target="_blank">http://localhost:3000</a> in your browser.</p>
+              
+              <h2>API Documentation</h2>
+              <p>For detailed API documentation, check the project's README or source code.</p>
+            </body>
+          </html>
+        `);
+      } else {
+        res.status(404).json({ message: 'Not Found' });
+      }
+    });
+  }
+
+  // Start the server
+  const port = parseInt(process.env.PORT || '5000', 10);
+  const server = app.listen(port, '0.0.0.0', () => {
+    console.log(`Server is running on http://localhost:${port}`);
+    console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
+    console.log(`Using ${process.env.USE_MOCK_STORAGE === 'true' ? 'mock' : 'database'} storage`);
+  });
+
+  return server;
 }
 
 // Start the server
-const port = parseInt(process.env.PORT || '5000', 10);
-const server = app.listen(port, '0.0.0.0', () => {
-  console.log(`Server is running on http://localhost:${port}`);
-  console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
-  console.log(`Using ${process.env.USE_MOCK_STORAGE === 'true' ? 'mock' : 'database'} storage`);
-});
+const server = await startServer();
 
 // Handle server errors
 server.on('error', (error: NodeJS.ErrnoException) => {
@@ -172,6 +179,7 @@ server.on('error', (error: NodeJS.ErrnoException) => {
     throw error;
   }
 
+  const port = parseInt(process.env.PORT || '5000', 10);
   const bind = typeof port === 'string' ? 'Pipe ' + port : 'Port ' + port;
 
   // Handle specific listen errors with friendly messages

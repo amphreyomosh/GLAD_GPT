@@ -66,11 +66,14 @@ interface WebSocketClient extends WebSocket {
   conversationId?: string;
 }
 
-export function registerRoutes(app: Express): void {
-  // Auth middleware - we'll call this without await since we can't make this function async
-  setupAuth(app).catch(err => {
+export async function registerRoutes(app: Express): Promise<void> {
+  // Auth middleware - properly await the setup
+  try {
+    await setupAuth(app);
+    console.log('Auth setup completed successfully');
+  } catch (err) {
     console.error('Failed to set up auth:', err);
-  });
+  }
 
   // Simple health check
   app.get('/api/health', (_req, res) => {
