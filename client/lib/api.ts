@@ -11,6 +11,7 @@ export async function sendMessage(message: string, token?: string) {
       'Content-Type': 'application/json',
       ...(token && { Authorization: `Bearer ${token}` }),
     },
+    credentials: 'include',
     body: JSON.stringify({ message }),
   });
 
@@ -29,6 +30,7 @@ export async function getConversations(token?: string) {
       'Content-Type': 'application/json',
       ...(token && { Authorization: `Bearer ${token}` }),
     },
+    credentials: 'include',
   });
 
   if (!response.ok) {
