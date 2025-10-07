@@ -80,6 +80,19 @@ export async function registerRoutes(app: Express): Promise<void> {
     res.json({ status: 'ok', time: new Date().toISOString() });
   });
 
+  // Diagnostic endpoint
+  app.get('/api/debug', (_req, res) => {
+    res.json({ 
+      status: 'ok',
+      environment: process.env.NODE_ENV,
+      corsOrigin: process.env.CORS_ORIGIN,
+      hasOpenAI: !!process.env.OPENAI_API_KEY,
+      openAIKeyPrefix: process.env.OPENAI_API_KEY?.substring(0, 10) + '...',
+      useMockStorage: process.env.USE_MOCK_STORAGE,
+      time: new Date().toISOString()
+    });
+  });
+
   // WebSocket setup
   const httpServer = createServer(app);
   const wss = new WebSocketServer({ server: httpServer, path: '/ws' });
@@ -169,14 +182,25 @@ export async function registerRoutes(app: Express): Promise<void> {
   // Session-based chat endpoint for backend authentication
   app.post('/api/chat/session', isAuthenticated, enforceSessionChatAttempts, async (req: any, res) => {
     try {
+      console.log('Chat session request received:', { user: req.user?.id, body: req.body });
+      
       const { message, mode, fileAnalyses } = req.body || {};
       if (!message || typeof message !== 'string') {
+        console.log('Invalid message:', message);
         return res.status(400).json({ message: 'Message is required' });
+      }
+
+      // Check OpenAI API key
+      if (!process.env.OPENAI_API_KEY) {
+        console.error('OpenAI API key not configured');
+        return res.status(500).json({ message: 'OpenAI API key not configured' });
       }
 
       const user = req.user;
       const uid: string = user.id;
       const isAnonymous: boolean = user.id === 'demo_user';
+
+      console.log('Processing chat for user:', { uid, isAnonymous });
 
       const messages = [
         { role: 'user' as const, content: message }
@@ -184,8 +208,12 @@ export async function registerRoutes(app: Express): Promise<void> {
 
       // Use faster model for simple queries to improve response time
       const selectedMode = mode || 'fast'; // Default to fast mode for better response times
+      
+      console.log('Calling OpenAI with mode:', selectedMode);
       const response = await enhancedOpenAIService.generateResponse(messages, selectedMode, fileAnalyses);
       const ai = response.mainResponse;
+
+      console.log('OpenAI response received, length:', ai?.length || 0);
 
       // Record chat (optional) - skip if Firebase not configured
       try {
@@ -206,10 +234,14 @@ export async function registerRoutes(app: Express): Promise<void> {
         }
       }
 
-      return res.json({ reply: ai, metadata: { mode: mode || 'auto' } });
-    } catch (err) {
+      return res.json({ reply: ai, metadata: { mode: selectedMode } });
+    } catch (err: any) {
       console.error('POST /api/chat/session error:', err);
-      return res.status(500).json({ message: 'Failed to process chat' });
+      const errorMessage = err?.message || 'Failed to process chat';
+      return res.status(500).json({ 
+        message: errorMessage,
+        details: process.env.NODE_ENV === 'development' ? err?.stack : undefined
+      });
     }
   });
 
