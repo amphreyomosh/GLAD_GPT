@@ -4,11 +4,15 @@ dist
 server/public
 vite.config.ts.*
 *.tar.gz
+
+# Environment files - NEVER commit these!
+.env
+.env.local
+.env.production
+.env.development
+client/.env.local
+
 client/.next
 client/node_modules
-.env
-.env.*
-*.env.local
-*.env
 firebase-debug.log
 firestore-debug.log
