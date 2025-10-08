@@ -87,15 +87,15 @@ export class EnhancedOpenAIService {
 private getModelsToTry(mode: AIMode): string[] {
   switch (mode) {
     case "fast":
-      return ["gpt-4.1-nano-2025-04-14"];
+      return ["gpt-4o-mini", "gpt-3.5-turbo"];
     case "auto":
     case "expert":
-      return ["gpt-4.1-mini-2025-04-14", "gpt-4.1-nano-2025-04-14"];
+      return ["gpt-4o-mini", "gpt-4o", "gpt-3.5-turbo"];
     case "heavy":
     case "code_architect":
-      return ["gpt-4.1-mini-2025-04-14"];
+      return ["gpt-4o", "gpt-4o-mini"];
     default:
-      return ["gpt-4.1-nano-2025-04-14"];
+      return ["gpt-4o-mini", "gpt-3.5-turbo"];
   }
 }
 
@@ -567,7 +567,7 @@ private extractListFromSection(section: string): string[] {
 
 // Enhanced image analysis with detailed descriptions
 async analyzeImage(base64Image: string, prompt?: string): Promise<EnhancedResponse> {
-  const visionModels = ["gpt-4.1-mini-2025-04-14", "gpt-4.1-nano-2025-04-14"];
+  const visionModels = ["gpt-4o", "gpt-4o-mini"];
   
   const enhancedPrompt = prompt || `Analyze this image in comprehensive detail:
   - Describe the visual elements, composition, and style
@@ -636,7 +636,7 @@ async analyzeDocument(
     const analysisPrompt = this.buildDocumentAnalysisPrompt(content, filename, mimeType, mode);
     
     const response = await openai.chat.completions.create({
-      model: "gpt-4.1-mini-2025-04-14",
+      model: "gpt-4o-mini",
       messages: [
         {
           role: "system",
