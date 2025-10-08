@@ -1,10 +1,16 @@
 "use client";
 import { useEffect, useState } from "react";
-import { auth, isFirebaseEnabled } from "@/lib/firebase";
-import { onAuthStateChanged, signOut, User } from "firebase/auth";
 import { callChat, logout, getCurrentUser } from "@/lib/api";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+
+// Define User interface locally since we're not using Firebase
+interface User {
+  uid: string;
+  email?: string | null;
+  displayName?: string | null;
+  isAnonymous?: boolean;
+}
 
 interface Msg { role: "user" | "ai"; content: string; id: string }
 interface ChatSession { id: string; title: string; messages: Msg[] }
