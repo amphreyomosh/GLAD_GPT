@@ -449,8 +449,8 @@ export default function ChatPage() {
 
         {/* Messages Container */}
         <div className="flex-1 overflow-y-auto">
-          {currentChat?.messages.length === 0 ? (
-            /* Welcome Screen */
+          {currentChat?.messages.length === 0 && !input.trim() ? (
+            /* Welcome Screen - only show when no messages AND no input */
             <div className="flex flex-col items-center justify-center h-full p-8">
               <div className="text-center max-w-md">
                 <h2 className={`text-2xl font-semibold mb-2 ${isDarkMode ? 'text-gray-100' : 'text-gray-900'}`}>
