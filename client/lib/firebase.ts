@@ -7,10 +7,10 @@ const hasValidFirebaseConfig = () => {
   const authDomain = process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN;
   const projectId = process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID;
   
-  // More lenient validation - just check if the essential values exist and aren't obviously placeholder
+  // Strict validation - only enable Firebase if all required values are properly set
   return !!(apiKey && authDomain && projectId && 
-           apiKey.length > 10 && 
-           authDomain.includes('.') && 
+           apiKey.length > 20 && // Firebase API keys are typically longer
+           authDomain.includes('.firebaseapp.com') && 
            projectId.length > 3 &&
            !apiKey.includes('your-') &&
            !authDomain.includes('your-project') &&

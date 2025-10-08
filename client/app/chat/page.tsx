@@ -24,70 +24,25 @@ export default function ChatPage() {
 
   useEffect(() => {
     const initializeAuth = async () => {
-      if (isFirebaseEnabled && auth) {
-        // Use Firebase authentication
-        const unsubscribe = onAuthStateChanged(auth, async (u: User | null) => {
-          console.log('Firebase auth state changed:', u?.uid, u?.isAnonymous);
-          setUser(u);
+      // Always use backend authentication for simplicity
+      console.log('Initializing backend authentication...');
+      
+      try {
+        const userData = await getCurrentUser();
+        
+        if (userData) {
+          console.log('Backend authentication successful:', userData.id);
+          const backendUser = {
+            uid: userData.id,
+            email: userData.email,
+            displayName: userData.firstName ? `${userData.firstName} ${userData.lastName}` : userData.email,
+            isAnonymous: userData.id === 'demo_user'
+          } as User;
+          
+          setUser(backendUser);
           setAuthChecked(true);
           
-          if (!u) {
-            // Try to sign in anonymously for guest users
-            try {
-              console.log('No user found, attempting anonymous sign-in...');
-              const { signInAsGuest } = await import("@/lib/firebase");
-              const anonymousUser = await signInAsGuest();
-              console.log('Anonymous sign-in successful:', anonymousUser.uid);
-              // The auth state change will trigger again with the anonymous user
-            } catch (error: any) {
-              console.error('Anonymous sign-in failed:', error);
-
-              // Check if it's an admin restriction error - try backend fallback
-              if (error.message.includes('admin-restricted') ||
-                  error.message.includes('not configured') ||
-                  error.code === 'auth/admin-restricted-operation') {
-                console.log('Firebase admin restriction detected, trying backend auth fallback...');
-
-                try {
-                  const { getCurrentUser } = await import("@/lib/api");
-                  const backendUser = await getCurrentUser();
-
-                  if (backendUser) {
-                    console.log('Backend authentication successful, using demo user');
-                    const demoUser = {
-                      uid: backendUser.id,
-                      email: backendUser.email,
-                      displayName: backendUser.firstName ? `${backendUser.firstName} ${backendUser.lastName}` : backendUser.email,
-                      isAnonymous: backendUser.id === 'demo_user'
-                    } as User;
-
-                    // Manually set the user state since we're not using Firebase auth
-                    setUser(demoUser);
-                    setAuthChecked(true);
-
-                    if (chatSessions.length === 0) {
-                      const initialChat: ChatSession = {
-                        id: Date.now().toString(),
-                        title: "New Chat",
-                        messages: []
-                      };
-                      setChatSessions([initialChat]);
-                      setCurrentChat(initialChat);
-                    }
-                    return;
-                  }
-                } catch (backendError) {
-                  console.error('Backend auth fallback also failed:', backendError);
-                }
-              }
-
-              router.push("/login");
-            }
-            return;
-          }
-          
-          if (u && chatSessions.length === 0) {
-            // Create initial chat session
+          if (chatSessions.length === 0) {
             const initialChat: ChatSession = {
               id: Date.now().toString(),
               title: "New Chat",
@@ -96,44 +51,16 @@ export default function ChatPage() {
             setChatSessions([initialChat]);
             setCurrentChat(initialChat);
           }
-        });
-        
-        return unsubscribe;
-      } else {
-        // Use backend authentication - fetch current user from API
-        try {
-          const userData = await getCurrentUser();
-          
-          if (userData) {
-            const backendUser = {
-              uid: userData.id,
-              email: userData.email,
-              displayName: userData.firstName ? `${userData.firstName} ${userData.lastName}` : userData.email,
-              isAnonymous: userData.id === 'demo_user'
-            } as User;
-            
-            setUser(backendUser);
-            setAuthChecked(true);
-            
-            if (chatSessions.length === 0) {
-              const initialChat: ChatSession = {
-                id: Date.now().toString(),
-                title: "New Chat",
-                messages: []
-              };
-              setChatSessions([initialChat]);
-              setCurrentChat(initialChat);
-            }
-          } else {
-            // User not authenticated, redirect to login
-            setAuthChecked(true);
-            router.push("/login");
-          }
-        } catch (error) {
-          console.error("Failed to get current user:", error);
+        } else {
+          // User not authenticated, redirect to login
+          console.log('No backend session found, redirecting to login');
           setAuthChecked(true);
           router.push("/login");
         }
+      } catch (error) {
+        console.error("Failed to get current user:", error);
+        setAuthChecked(true);
+        router.push("/login");
       }
     };
 
@@ -221,25 +148,9 @@ export default function ChatPage() {
     try {
       setBusy(true);
       
-      let reply: string;
-      
-      if (isFirebaseEnabled && auth && user) {
-        // Use Firebase authentication - get ID token
-        try {
-          const idToken = await user.getIdToken();
-          console.log('Using Firebase authentication with token');
-          reply = await callChat(text, idToken);
-        } catch (tokenError) {
-          console.error('Failed to get Firebase ID token:', tokenError);
-          // Fallback to session-based authentication
-          console.log('Falling back to session-based authentication');
-          reply = await callChat(text);
-        }
-      } else {
-        // Use session-based authentication
-        console.log('Using session-based authentication');
-        reply = await callChat(text);
-      }
+      // Always use session-based authentication for simplicity
+      console.log('Using session-based authentication');
+      const reply = await callChat(text);
       
       const aiMsg: Msg = { role: "ai", content: reply, id: (Date.now() + 1).toString() };
       
@@ -378,11 +289,7 @@ export default function ChatPage() {
             <button 
               onClick={async () => {
                 try {
-                  if (isFirebaseEnabled && auth) {
-                    await signOut(auth);
-                  } else {
-                    await logout();
-                  }
+                  await logout();
                   router.push("/login");
                 } catch (error) {
                   console.error("Logout error:", error);
