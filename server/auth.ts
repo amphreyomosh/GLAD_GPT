@@ -43,7 +43,8 @@ export function getSession() {
     saveUninitialized: false,
     cookie: {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
+      secure: process.env.NODE_ENV === "production" && process.env.CORS_ORIGIN?.includes('https'),
+      sameSite: process.env.NODE_ENV === "production" ? 'none' : 'lax',
       maxAge: sessionTtl,
     },
   });
@@ -123,6 +124,13 @@ export async function setupAuth(app: Express) {
   // Simple demo authentication - creates a user session
   app.post('/api/auth/demo', async (req, res) => {
     try {
+      console.log('Demo login request received');
+      console.log('Session before demo login:', {
+        sessionId: (req.session as any).id,
+        userId: (req.session as any).userId,
+        cookie: req.session.cookie
+      });
+      
       const demoUser = await storage.upsertUser({
         id: 'demo_user',
         email: 'demo@gladgpt.com',
@@ -133,6 +141,12 @@ export async function setupAuth(app: Express) {
       // Set user in session
       (req.session as any).userId = demoUser.id;
       req.user = demoUser;
+      
+      console.log('Demo login successful, session after:', {
+        sessionId: (req.session as any).id,
+        userId: (req.session as any).userId,
+        cookie: req.session.cookie
+      });
       
       res.json({ user: demoUser, success: true });
     } catch (error) {
@@ -247,6 +261,14 @@ export async function setupAuth(app: Express) {
 }
 
 export const isAuthenticated: RequestHandler = async (req, res, next) => {
+  console.log('Authentication check for:', req.path);
+  console.log('Session data:', {
+    sessionId: (req.session as any)?.id,
+    userId: (req.session as any)?.userId,
+    passportUser: (req.session as any)?.passport?.user,
+    cookie: req.session?.cookie
+  });
+  
   // Check for userId set by our auth methods (demo, email/password)
   let userId = (req.session as any)?.userId;
 
@@ -256,15 +278,19 @@ export const isAuthenticated: RequestHandler = async (req, res, next) => {
   }
 
   if (!userId) {
+    console.log('No userId found in session - authentication required');
     return res.status(401).json({ message: "Authentication required" });
   }
 
   try {
+    console.log('Looking up user:', userId);
     const user = await storage.getUser(userId);
     if (!user) {
+      console.log('User not found in storage:', userId);
       return res.status(401).json({ message: "User not found" });
     }
 
+    console.log('Authentication successful for user:', user.id);
     req.user = user;
     next();
   } catch (error) {
