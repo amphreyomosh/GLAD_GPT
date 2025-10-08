@@ -1,5 +1,5 @@
 import type { Request, Response, NextFunction, RequestHandler } from "express";
-import { getAdminAuth, getAdminDb } from "./firebaseAdmin.js";
+import { getAdminAuth, getAdminDb, isFirebaseAdminAvailable } from "./firebaseAdmin.js";
 import type { Transaction } from "firebase-admin/firestore";
 
 export interface UserProfileDoc {
@@ -11,6 +11,15 @@ export interface UserProfileDoc {
 
 export const verifyFirebaseToken: RequestHandler = async (req: Request, res: Response, next: NextFunction) => {
   try {
+    // Check if Firebase Admin is available
+    if (!isFirebaseAdminAvailable()) {
+      console.warn("Firebase Admin not available, skipping token verification");
+      return res.status(503).json({ 
+        message: "Firebase authentication not configured on server",
+        code: "FIREBASE_ADMIN_NOT_CONFIGURED"
+      });
+    }
+
     const authHeader = req.headers.authorization || "";
     if (!authHeader.startsWith("Bearer ")) {
       return res.status(401).json({ message: "Missing Authorization: Bearer <token>" });
@@ -26,6 +35,10 @@ export const verifyFirebaseToken: RequestHandler = async (req: Request, res: Res
 };
 
 export async function getOrCreateUserProfile(uid: string, email?: string | null): Promise<UserProfileDoc> {
+  if (!isFirebaseAdminAvailable()) {
+    throw new Error("Firebase Admin not configured");
+  }
+  
   const ref = getAdminDb().collection("users").doc(uid);
   const snap = await ref.get();
   if (!snap.exists) {
@@ -52,6 +65,14 @@ export async function getOrCreateUserProfile(uid: string, email?: string | null)
 
 export const enforceChatAttempts: RequestHandler = async (req, res, next) => {
   try {
+    if (!isFirebaseAdminAvailable()) {
+      console.warn("Firebase Admin not available, skipping chat attempt enforcement");
+      return res.status(503).json({ 
+        message: "Firebase authentication not configured on server",
+        code: "FIREBASE_ADMIN_NOT_CONFIGURED"
+      });
+    }
+
     const firebaseUser = (req as any).firebaseUser as { uid: string; email?: string } | undefined;
     if (!firebaseUser) return res.status(401).json({ message: "Unauthorized" });
 
@@ -79,6 +100,11 @@ export const enforceChatAttempts: RequestHandler = async (req, res, next) => {
 };
 
 export async function incrementAnonymousAttempt(uid: string): Promise<void> {
+  if (!isFirebaseAdminAvailable()) {
+    console.warn("Firebase Admin not available, skipping attempt increment");
+    return;
+  }
+  
   const db = getAdminDb();
   const ref = db.collection("users").doc(uid);
   await db.runTransaction(async (tx: Transaction) => {
@@ -90,6 +116,11 @@ export async function incrementAnonymousAttempt(uid: string): Promise<void> {
 
 export async function recordChat(uid: string, prompt: string, response: string, mode?: string) {
   try {
+    if (!isFirebaseAdminAvailable()) {
+      console.warn("Firebase Admin not available, skipping chat recording");
+      return;
+    }
+    
     if (process.env.STORE_CHAT_HISTORY !== "true") return;
     const ref = getAdminDb().collection("users").doc(uid).collection("chats").doc();
     await ref.set({

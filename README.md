@@ -1,132 +1,160 @@
-# GLAD GPT – Client/Server Chat App
+# GLAD GPT - AI Chat Application
 
-Modern AI chat app split into:
-
-- `client/` – Next.js (Vercel) with Firebase Auth
-- `server/` – Express (Render) proxying OpenAI and verifying Firebase tokens
+A modern AI chat application built with Next.js and Express, featuring session-based authentication and real-time messaging.
 
 ## Features
 
-- **Auth**: Firebase (Google, Email/Password, Guest)
-- **Chat**: Frontend calls backend `/api/chat` only
-- **Limits**: 3 free chats for anonymous users (stored in Firestore)
-- **Optional**: Firestore chat history
+- **AI Chat Interface** - Clean, modern chat UI with real-time messaging
+- **Simple Authentication** - Email/password and demo mode
+- **User Management** - Registration, login, and profile management
+- **Responsive Design** - Works seamlessly on desktop and mobile
+- **Dark/Light Mode** - Toggle between themes
+- **Chat History** - Persistent conversation storage
+- **Production Ready** - Deployed on Render
 
 ## Tech Stack
 
-- Frontend: Next.js 14, React 18, Firebase
-- Backend: Node.js, Express, `openai`
-- Database: Firebase Firestore
-- Deploy: Vercel (client) + Render (server)
+### Frontend
+- **Next.js 14** - React framework with App Router
+- **TypeScript** - Type-safe development
+- **Tailwind CSS** - Utility-first styling
 
-## Structure
+### Backend
+- **Express.js** - Node.js web framework
+- **TypeScript** - Type-safe server development
+- **Session-based Auth** - Secure authentication
+- **OpenAI API** - AI chat functionality
 
-```
-├── client/                 # Next.js app
-│   ├── app/                # /, /login, /chat
-│   ├── lib/                # firebase.ts, api.ts
-│   └── .env.local.example
-├── server/                 # Express app
-│   ├── index.ts            # entry
-│   ├── routes.ts           # /api/health, /api/chat
-│   ├── openai.ts           # uses gpt-4.1-nano/mini models
-│   ├── firebaseAdmin.ts    # lazy admin init
-│   └── firebaseAuth.ts     # token verify + attempts
-├── Procfile                # web: node server/dist/index.js
-├── .env.example            # backend env template
-└── package.json            # root scripts build server
-```
+## Quick Start
 
-## Env Setup
+### Prerequisites
+- Node.js 18+ and npm
+- OpenAI API key
 
-### Frontend (client/.env.local)
-
-```
-NEXT_PUBLIC_FIREBASE_API_KEY=your_api_key
-NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=your_auth_domain
-NEXT_PUBLIC_FIREBASE_PROJECT_ID=your_project_id
-NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=your_storage_bucket
-NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=your_sender_id
-NEXT_PUBLIC_FIREBASE_APP_ID=your_app_id
-NEXT_PUBLIC_API_URL=https://your-render-backend.com/api
-```
-
-### Backend (root .env)
-
-```
-NODE_ENV=production
-PORT=5200
-OPENAI_API_KEY=sk-xxx
-FIREBASE_PROJECT_ID=xxx
-FIREBASE_CLIENT_EMAIL=xxx@project.iam.gserviceaccount.com
-FIREBASE_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\nxxx\n-----END PRIVATE KEY-----\n"
-CORS_ORIGIN=https://your-frontend.vercel.app,http://localhost:3000
-STORE_CHAT_HISTORY=false
-```
-
-## API
-
-- `GET /api/health` – Healthcheck
-- `POST /api/chat` – Body `{ message: string }` with `Authorization: Bearer <Firebase ID token>`
-
-Anonymous users are limited to 3 chats; after that the server returns `{ code: "ATTEMPTS_EXCEEDED" }`.
-
-## Firebase
-
-- Enable Auth providers (Google, Email/Password, Anonymous)
-- Firestore structure:
-
-```
-users/{uid}: { uid, email, attempts, lastActive }
-users/{uid}/chats/{autoId}: { prompt, response, mode, createdAt }
-```
-
-Security rules: `firebase/firestore.rules`
-
-## Development
-
-Backend:
-
-```
+### 1. Clone and Install
+```bash
+git clone <repository-url>
+cd GrokClone
 npm install
+cd client && npm install && cd ..
+```
+
+### 2. Environment Setup
+Copy the example environment files:
+```bash
+cp .env.example .env
+cp client/.env.local.example client/.env.local
+```
+
+### 3. Configure Environment Variables
+
+#### Backend (.env)
+```env
+# Required
+OPENAI_API_KEY=your-openai-api-key-here
+SESSION_SECRET=your-session-secret-change-in-production
+
+# Development
+NODE_ENV=development
+PORT=5006
+BASE_URL=http://localhost:5006
+CORS_ORIGIN=http://localhost:3000
+USE_MOCK_STORAGE=true
+
+# Optional - Google OAuth
+GOOGLE_CLIENT_ID=your-google-client-id
+GOOGLE_CLIENT_SECRET=your-google-client-secret
+
+# Optional - Firebase Admin (for enhanced features)
+# FIREBASE_PROJECT_ID=your-project-id
+# FIREBASE_CLIENT_EMAIL=your-service-account@your-project.iam.gserviceaccount.com
+# FIREBASE_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\nYOUR-PRIVATE-KEY\n-----END PRIVATE KEY-----"
+```
+
+#### Frontend (client/.env.local)
+```env
+# Required
+NEXT_PUBLIC_API_URL=http://localhost:5006
+
+# Optional - Firebase Client (for enhanced features)
+# NEXT_PUBLIC_FIREBASE_API_KEY=your-api-key
+# NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=your-project.firebaseapp.com
+# NEXT_PUBLIC_FIREBASE_PROJECT_ID=your-project-id
+```
+
+### 4. Run the Application
+```bash
+# Terminal 1 - Backend
 npm run dev
+
+# Terminal 2 - Frontend
+cd client && npm run dev
 ```
 
-Client:
+Visit http://localhost:3000 to use the application.
+
+## Authentication
+
+The application uses session-based authentication with these options:
+
+1. **Demo/Guest Mode** - Quick access for testing
+2. **Email/Password** - Traditional registration and login
+3. **Google OAuth** - Sign in with Google (optional)
+
+Firebase authentication is optional and can be enabled by setting the Firebase environment variables.
+
+## Deployment
+
+### Render Deployment
+1. Connect your GitHub repository to Render
+2. Create a new Web Service
+3. Set environment variables in Render dashboard:
+   - `OPENAI_API_KEY`
+   - `SESSION_SECRET`
+   - `NODE_ENV=production`
+   - `CORS_ORIGIN=https://your-frontend-url.vercel.app`
+4. Deploy automatically on git push
+
+## Project Structure
 
 ```
-cd client
-npm install
-npm run dev
+GrokClone/
+├── client/                 # Next.js frontend
+│   ├── app/               # App router pages
+│   ├── components/        # React components
+│   └── lib/              # Utilities and API calls
+├── server/                # Express backend
+│   ├── auth.ts           # Authentication logic
+│   ├── routes.ts         # API routes
+│   ├── openai.ts         # AI integration
+│   └── storage.ts        # Data persistence
+└── shared/               # Shared types and schemas
 ```
 
-Set `NEXT_PUBLIC_API_URL=http://localhost:5000/api` for local dev.
+## Troubleshooting
 
-## Build & Deploy
+### Common Issues
 
-Backend (Render):
+1. **500 Error on Chat** - Check that `OPENAI_API_KEY` is set correctly
+2. **401 Authentication Error** - Clear browser cookies and try demo login
+3. **CORS Errors** - Ensure `CORS_ORIGIN` matches your frontend URL
 
-- Build: `npm run build` (root)
-- Start: Procfile `web: node server/dist/index.js`
+### Firebase Setup (Optional)
 
-Frontend (Vercel):
+If you want to enable Firebase features:
+1. Create a Firebase project
+2. Generate service account credentials
+3. Add Firebase environment variables to both client and server
+4. Restart the application
 
-- Root: `client/`
-- Build: `npm run build`
-- Output: `.next`
+## Contributing
 
-## Cleanup
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Test thoroughly
+5. Submit a pull request
 
-✅ **CLEANED UP**: Removed legacy assets and updated to use Next.js 13+ app directory structure:
-- ✅ Using `client/app/` directory (not `src`)
-- ✅ Removed empty `src` directory
-- ✅ Updated Tailwind config to match app structure
-- ✅ All components now in proper `app/` structure
+## License
 
-## OpenAI Models
-
-- fast: `gpt-4.1-nano-2025-04-14`
-- auto/expert/heavy: `gpt-4.1-mini-2025-04-14`
-
-Used in `server/openai.ts` by `EnhancedOpenAIService`.
-# GLAD_GPT
+MIT License - see LICENSE file for details.
