@@ -1,24 +1,39 @@
 import { initializeApp, getApps, FirebaseApp } from "firebase/app";
-import { getAuth, GoogleAuthProvider } from "firebase/auth";
+import { getAuth, GoogleAuthProvider, signInAnonymously, connectAuthEmulator } from "firebase/auth";
 
-const firebaseConfig = {
-  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY || 'demo-key',
-  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN || 'demo.firebaseapp.com',
-  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || 'demo-project',
-  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET || 'demo.appspot.com',
-  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID || '123456789',
-  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID || 'demo-app-id',
+// Check if we have valid Firebase configuration
+const hasValidFirebaseConfig = () => {
+  const requiredVars = [
+    'NEXT_PUBLIC_FIREBASE_API_KEY',
+    'NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN',
+    'NEXT_PUBLIC_FIREBASE_PROJECT_ID'
+  ];
+  
+  return requiredVars.every(varName => {
+    const value = process.env[varName];
+    return value && 
+           value !== 'demo-key' && 
+           value !== 'your-firebase-api-key-here' &&
+           value !== 'your-project.firebaseapp.com' &&
+           value !== 'your-project-id';
+  });
 };
 
-// Check if config is valid (not using demo values)
-const isValidConfig = process.env.NEXT_PUBLIC_FIREBASE_API_KEY && 
-                     process.env.NEXT_PUBLIC_FIREBASE_API_KEY !== 'demo-key' &&
-                     process.env.NEXT_PUBLIC_FIREBASE_API_KEY !== 'your_api_key';
+const firebaseConfig = {
+  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
+  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
+  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
+  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
+  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
+};
 
 let app: FirebaseApp | null = null;
 let auth: any = null;
 let googleProvider: any = null;
 let isFirebaseEnabled = false;
+
+const isValidConfig = hasValidFirebaseConfig();
 
 if (isValidConfig) {
   try {
@@ -28,16 +43,35 @@ if (isValidConfig) {
       app = getApps()[0]!;
     }
     auth = getAuth(app);
+    
+    // Enable anonymous authentication
     googleProvider = new GoogleAuthProvider();
     isFirebaseEnabled = true;
-    console.log('Firebase initialized successfully');
+    console.log('Firebase initialized successfully with project:', firebaseConfig.projectId);
   } catch (error) {
     console.warn('Firebase initialization failed:', error);
     isFirebaseEnabled = false;
   }
 } else {
-  console.warn('Firebase not configured - using fallback authentication');
+  console.warn('Firebase not configured properly - using backend authentication fallback');
+  console.warn('Missing or invalid Firebase environment variables. Please check your .env.local file.');
   isFirebaseEnabled = false;
 }
+
+// Helper function to sign in anonymously
+export const signInAsGuest = async () => {
+  if (!auth || !isFirebaseEnabled) {
+    throw new Error('Firebase not configured for anonymous authentication');
+  }
+  
+  try {
+    const result = await signInAnonymously(auth);
+    console.log('Anonymous sign-in successful:', result.user.uid);
+    return result.user;
+  } catch (error: any) {
+    console.error('Anonymous sign-in failed:', error);
+    throw new Error(`Anonymous sign-in failed: ${error.message}`);
+  }
+};
 
 export { auth, googleProvider, isFirebaseEnabled };

@@ -3,12 +3,24 @@ service cloud.firestore {
   match /databases/{database}/documents {
     // User profile document: users/{uid}
     match /users/{uid} {
+      // Allow authenticated users (including anonymous) to access their own data
       allow read, write: if request.auth != null && request.auth.uid == uid;
 
       // Subcollection: chats
       match /chats/{chatId} {
+        // Allow authenticated users (including anonymous) to access their own chats
         allow read, write: if request.auth != null && request.auth.uid == uid;
       }
+    }
+    
+    // Allow anonymous users to create and access their profiles
+    // This is needed for the admin SDK to create user profiles for anonymous users
+    match /users/{uid} {
+      allow create: if request.auth != null && 
+                   request.auth.uid == uid &&
+                   (request.auth.token.firebase.sign_in_provider == 'anonymous' || 
+                    request.auth.token.firebase.sign_in_provider == 'google.com' ||
+                    request.auth.token.firebase.sign_in_provider == 'password');
     }
   }
 }

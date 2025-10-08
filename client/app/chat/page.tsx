@@ -23,29 +23,44 @@ export default function ChatPage() {
   const [hasUsedDemoChat, setHasUsedDemoChat] = useState(false);
 
   useEffect(() => {
-    if (isFirebaseEnabled && auth) {
-      // Use Firebase authentication
-      return onAuthStateChanged(auth, (u: User | null) => {
-        setUser(u);
-        setAuthChecked(true);
-        if (!u) {
-          router.push("/login");
-          return;
-        }
-        if (u && chatSessions.length === 0) {
-          // Create initial chat session
-          const initialChat: ChatSession = {
-            id: Date.now().toString(),
-            title: "New Chat",
-            messages: []
-          };
-          setChatSessions([initialChat]);
-          setCurrentChat(initialChat);
-        }
-      });
-    } else {
-      // Use backend authentication - fetch current user from API
-      const checkBackendAuth = async () => {
+    const initializeAuth = async () => {
+      if (isFirebaseEnabled && auth) {
+        // Use Firebase authentication
+        const unsubscribe = onAuthStateChanged(auth, async (u: User | null) => {
+          console.log('Firebase auth state changed:', u?.uid, u?.isAnonymous);
+          setUser(u);
+          setAuthChecked(true);
+          
+          if (!u) {
+            // Try to sign in anonymously for guest users
+            try {
+              console.log('No user found, attempting anonymous sign-in...');
+              const { signInAsGuest } = await import("@/lib/firebase");
+              const anonymousUser = await signInAsGuest();
+              console.log('Anonymous sign-in successful:', anonymousUser.uid);
+              // The auth state change will trigger again with the anonymous user
+            } catch (error) {
+              console.error('Anonymous sign-in failed:', error);
+              router.push("/login");
+            }
+            return;
+          }
+          
+          if (u && chatSessions.length === 0) {
+            // Create initial chat session
+            const initialChat: ChatSession = {
+              id: Date.now().toString(),
+              title: "New Chat",
+              messages: []
+            };
+            setChatSessions([initialChat]);
+            setCurrentChat(initialChat);
+          }
+        });
+        
+        return unsubscribe;
+      } else {
+        // Use backend authentication - fetch current user from API
         try {
           const userData = await getCurrentUser();
           
@@ -71,36 +86,18 @@ export default function ChatPage() {
             }
           } else {
             // User not authenticated, redirect to login
+            setAuthChecked(true);
             router.push("/login");
           }
         } catch (error) {
           console.error("Failed to get current user:", error);
-          // For now, create a temporary user to avoid redirect loop
-          // This will be fixed once session handling is working properly
-          const tempUser = {
-            uid: "temp_user",
-            email: "user@gladgpt.com",
-            displayName: "User",
-            isAnonymous: false
-          } as User;
-          
-          setUser(tempUser);
           setAuthChecked(true);
-          
-          if (chatSessions.length === 0) {
-            const initialChat: ChatSession = {
-              id: Date.now().toString(),
-              title: "New Chat",
-              messages: []
-            };
-            setChatSessions([initialChat]);
-            setCurrentChat(initialChat);
-          }
+          router.push("/login");
         }
-      };
-      
-      checkBackendAuth();
-    }
+      }
+    };
+
+    initializeAuth();
   }, [chatSessions.length, router]);
 
   const createNewChat = () => {
@@ -183,7 +180,27 @@ export default function ChatPage() {
     
     try {
       setBusy(true);
-      const reply = await callChat(text);
+      
+      let reply: string;
+      
+      if (isFirebaseEnabled && auth && user) {
+        // Use Firebase authentication - get ID token
+        try {
+          const idToken = await user.getIdToken();
+          console.log('Using Firebase authentication with token');
+          reply = await callChat(text, idToken);
+        } catch (tokenError) {
+          console.error('Failed to get Firebase ID token:', tokenError);
+          // Fallback to session-based authentication
+          console.log('Falling back to session-based authentication');
+          reply = await callChat(text);
+        }
+      } else {
+        // Use session-based authentication
+        console.log('Using session-based authentication');
+        reply = await callChat(text);
+      }
+      
       const aiMsg: Msg = { role: "ai", content: reply, id: (Date.now() + 1).toString() };
       
       const finalMessages = [...updatedMessages, aiMsg];
@@ -199,6 +216,7 @@ export default function ChatPage() {
         setHasUsedDemoChat(true);
       }
     } catch (e: any) {
+      console.error('Send message error:', e);
       setError(e?.message || "Failed to send chat");
     } finally {
       setBusy(false);
