@@ -21,6 +21,11 @@ function ensureInitialized() {
   }
 
   try {
+    // Normalize private key: remove surrounding quotes and convert literal \n to real newlines
+    privateKey = privateKey.trim();
+    if ((privateKey.startsWith('"') && privateKey.endsWith('"')) || (privateKey.startsWith("'") && privateKey.endsWith("'"))) {
+      privateKey = privateKey.slice(1, -1);
+    }
     if (privateKey.includes("\\n")) {
       privateKey = privateKey.replace(/\\n/g, "\n");
     }

@@ -10,6 +10,7 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from 'node:url';
 import { verifyFirebaseToken, enforceChatAttempts, incrementAnonymousAttempt, recordChat } from "./firebaseAuth.js";
+import { isFirebaseAdminAvailable } from "./firebaseAdmin.js";
 
 // Simple in-memory storage for demo user chat sessions (in production, use a database)
 const demoUserChatSessions = new Map<string, Set<string>>();
@@ -90,6 +91,16 @@ export async function registerRoutes(app: Express): Promise<void> {
       openAIKeyPrefix: process.env.OPENAI_API_KEY?.substring(0, 10) + '...',
       useMockStorage: process.env.USE_MOCK_STORAGE,
       time: new Date().toISOString()
+    });
+  });
+
+  // Firebase Admin readiness endpoint
+  app.get('/api/firebase/status', (_req, res) => {
+    const adminAvailable = isFirebaseAdminAvailable();
+    res.json({
+      adminAvailable,
+      projectId: process.env.FIREBASE_PROJECT_ID || null,
+      hasClientEmail: !!process.env.FIREBASE_CLIENT_EMAIL,
     });
   });
 

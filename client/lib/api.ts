@@ -1,11 +1,22 @@
 import { auth } from "./firebase";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://glad-gpt.onrender.com';
+// Normalize the public API URL to ensure we don't end up with /api/api
+function normalizeBaseUrl(url: string) {
+  let base = (url || '').trim();
+  if (!base) return 'https://glad-gpt.onrender.com';
+  // remove trailing slash
+  if (base.endsWith('/')) base = base.slice(0, -1);
+  // remove trailing /api (case-insensitive)
+  if (base.toLowerCase().endsWith('/api')) base = base.slice(0, -4);
+  return base;
+}
+
+const BASE_URL = normalizeBaseUrl(process.env.NEXT_PUBLIC_API_URL || 'https://glad-gpt.onrender.com');
 
 // API_URL configured from environment
 
 export async function sendMessage(message: string, token?: string) {
-  const response = await fetch(`${API_URL}/api/chat`, {
+  const response = await fetch(`${BASE_URL}/api/chat`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -24,7 +35,7 @@ export async function sendMessage(message: string, token?: string) {
 }
 
 export async function sendSessionMessage(message: string, mode?: string) {
-  const response = await fetch(`${API_URL}/api/chat/session`, {
+  const response = await fetch(`${BASE_URL}/api/chat/session`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -42,7 +53,7 @@ export async function sendSessionMessage(message: string, mode?: string) {
 }
 
 export async function getConversations(token?: string) {
-  const response = await fetch(`${API_URL}/api/conversations`, {
+  const response = await fetch(`${BASE_URL}/api/conversations`, {
     method: 'GET',
     headers: {
       'Content-Type': 'application/json',
@@ -61,7 +72,7 @@ export async function getConversations(token?: string) {
 
 // Backend authentication functions
 export async function loginWithEmail(email: string, password: string) {
-  const response = await fetch(`${API_URL}/api/auth/login`, {
+  const response = await fetch(`${BASE_URL}/api/auth/login`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -79,7 +90,7 @@ export async function loginWithEmail(email: string, password: string) {
 }
 
 export async function signupWithEmail(firstName: string, lastName: string, email: string, password: string) {
-  const response = await fetch(`${API_URL}/api/auth/signup`, {
+  const response = await fetch(`${BASE_URL}/api/auth/signup`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -97,7 +108,7 @@ export async function signupWithEmail(firstName: string, lastName: string, email
 }
 
 export async function loginAsDemo() {
-  const response = await fetch(`${API_URL}/api/auth/demo`, {
+  const response = await fetch(`${BASE_URL}/api/auth/demo`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -114,7 +125,7 @@ export async function loginAsDemo() {
 }
 
 export async function logout() {
-  const response = await fetch(`${API_URL}/api/auth/logout`, {
+  const response = await fetch(`${BASE_URL}/api/auth/logout`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -131,7 +142,7 @@ export async function logout() {
 }
 
 export async function getCurrentUser() {
-  const response = await fetch(`${API_URL}/api/auth/user`, {
+  const response = await fetch(`${BASE_URL}/api/auth/user`, {
     method: 'GET',
     headers: {
       'Content-Type': 'application/json',
@@ -152,7 +163,7 @@ export async function callChat(message: string, token?: string) {
   if (token) {
     try {
       console.log('Making Firebase token-based chat request...');
-      const response = await fetch(`${API_URL}/api/chat`, {
+      const response = await fetch(`${BASE_URL}/api/chat`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -187,7 +198,7 @@ export async function callChat(message: string, token?: string) {
 
   // Use session-based endpoint as fallback or primary method
   console.log('Making session-based chat request...');
-  const response = await fetch(`${API_URL}/api/chat/session`, {
+  const response = await fetch(`${BASE_URL}/api/chat/session`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
