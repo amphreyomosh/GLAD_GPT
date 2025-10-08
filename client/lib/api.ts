@@ -146,10 +146,47 @@ export async function getCurrentUser() {
   return response.json();
 }
 
-// Simplified chat function - always uses session-based authentication
-export async function callChat(message: string) {
+// Smart chat function - tries Firebase token first, falls back to session
+export async function callChat(message: string, token?: string) {
+  // Try Firebase endpoint first if token is provided
+  if (token) {
+    try {
+      console.log('Making Firebase token-based chat request...');
+      const response = await fetch(`${API_URL}/api/chat`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        credentials: 'include',
+        body: JSON.stringify({ message }),
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        return result.reply || result;
+      }
+
+      // Check if it's a Firebase admin configuration error
+      const error = await response.json().catch(() => ({}));
+      if (error.code === 'FIREBASE_ADMIN_NOT_CONFIGURED' || response.status === 503) {
+        console.log('Firebase admin not configured, falling back to session auth');
+        // Fall through to session-based auth
+      } else {
+        throw new Error(error.message || 'Firebase chat request failed');
+      }
+    } catch (err: any) {
+      if (err.message.includes('FIREBASE_ADMIN_NOT_CONFIGURED')) {
+        console.log('Firebase admin not configured, falling back to session auth');
+        // Fall through to session-based auth
+      } else {
+        throw err;
+      }
+    }
+  }
+
+  // Use session-based endpoint as fallback or primary method
   console.log('Making session-based chat request...');
-  
   const response = await fetch(`${API_URL}/api/chat/session`, {
     method: 'POST',
     headers: {

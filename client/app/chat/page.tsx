@@ -1,16 +1,10 @@
 "use client";
 import { useEffect, useState } from "react";
+import { auth, isFirebaseEnabled } from "@/lib/firebase";
+import { onAuthStateChanged, signOut, User } from "firebase/auth";
 import { callChat, logout, getCurrentUser } from "@/lib/api";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-
-// Define User interface locally since we're not using Firebase
-interface User {
-  uid: string;
-  email?: string | null;
-  displayName?: string | null;
-  isAnonymous?: boolean;
-}
 
 interface Msg { role: "user" | "ai"; content: string; id: string }
 interface ChatSession { id: string; title: string; messages: Msg[] }
@@ -30,43 +24,107 @@ export default function ChatPage() {
 
   useEffect(() => {
     const initializeAuth = async () => {
-      // Always use backend authentication for simplicity
-      console.log('Initializing backend authentication...');
-      
-      try {
-        const userData = await getCurrentUser();
-        
-        if (userData) {
-          console.log('Backend authentication successful:', userData.id);
-          const backendUser = {
-            uid: userData.id,
-            email: userData.email,
-            displayName: userData.firstName ? `${userData.firstName} ${userData.lastName}` : userData.email,
-            isAnonymous: userData.id === 'demo_user'
-          } as User;
+      if (isFirebaseEnabled && auth) {
+        // Use Firebase authentication if available
+        console.log('Initializing Firebase authentication...');
+        const unsubscribe = onAuthStateChanged(auth, async (firebaseUser: User | null) => {
+          console.log('Firebase auth state changed:', firebaseUser?.uid, firebaseUser?.isAnonymous);
           
-          setUser(backendUser);
-          setAuthChecked(true);
-          
-          if (chatSessions.length === 0) {
-            const initialChat: ChatSession = {
-              id: Date.now().toString(),
-              title: "New Chat",
-              messages: []
-            };
-            setChatSessions([initialChat]);
-            setCurrentChat(initialChat);
+          if (firebaseUser) {
+            // Firebase user is logged in
+            setUser(firebaseUser);
+            setAuthChecked(true);
+            
+            if (chatSessions.length === 0) {
+              const initialChat: ChatSession = {
+                id: Date.now().toString(),
+                title: "New Chat",
+                messages: []
+              };
+              setChatSessions([initialChat]);
+              setCurrentChat(initialChat);
+            }
+          } else {
+            // No Firebase user, check backend session
+            console.log('No Firebase user, checking backend session...');
+            try {
+              const userData = await getCurrentUser();
+              
+              if (userData) {
+                console.log('Backend authentication successful:', userData.id);
+                const backendUser = {
+                  uid: userData.id,
+                  email: userData.email,
+                  displayName: userData.firstName ? `${userData.firstName} ${userData.lastName}` : userData.email,
+                  isAnonymous: userData.id === 'demo_user'
+                } as User;
+                
+                setUser(backendUser);
+                setAuthChecked(true);
+                
+                if (chatSessions.length === 0) {
+                  const initialChat: ChatSession = {
+                    id: Date.now().toString(),
+                    title: "New Chat",
+                    messages: []
+                  };
+                  setChatSessions([initialChat]);
+                  setCurrentChat(initialChat);
+                }
+              } else {
+                // No authentication found, redirect to login
+                console.log('No authentication found, redirecting to login');
+                setAuthChecked(true);
+                router.push("/login");
+              }
+            } catch (error) {
+              console.error("Failed to get current user:", error);
+              setAuthChecked(true);
+              router.push("/login");
+            }
           }
-        } else {
-          // User not authenticated, redirect to login
-          console.log('No backend session found, redirecting to login');
+        });
+        
+        return unsubscribe;
+      } else {
+        // Firebase not available, use backend authentication only
+        console.log('Firebase not available, using backend authentication...');
+        
+        try {
+          const userData = await getCurrentUser();
+          
+          if (userData) {
+            console.log('Backend authentication successful:', userData.id);
+            const backendUser = {
+              uid: userData.id,
+              email: userData.email,
+              displayName: userData.firstName ? `${userData.firstName} ${userData.lastName}` : userData.email,
+              isAnonymous: userData.id === 'demo_user'
+            } as User;
+            
+            setUser(backendUser);
+            setAuthChecked(true);
+            
+            if (chatSessions.length === 0) {
+              const initialChat: ChatSession = {
+                id: Date.now().toString(),
+                title: "New Chat",
+                messages: []
+              };
+              setChatSessions([initialChat]);
+              setCurrentChat(initialChat);
+            }
+          } else {
+            // User not authenticated, redirect to login
+            console.log('No backend session found, redirecting to login');
+            setAuthChecked(true);
+            router.push("/login");
+          }
+        } catch (error) {
+          console.error("Failed to get current user:", error);
           setAuthChecked(true);
           router.push("/login");
         }
-      } catch (error) {
-        console.error("Failed to get current user:", error);
-        setAuthChecked(true);
-        router.push("/login");
       }
     };
 
@@ -154,9 +212,26 @@ export default function ChatPage() {
     try {
       setBusy(true);
       
-      // Always use session-based authentication for simplicity
-      console.log('Using session-based authentication');
-      const reply = await callChat(text);
+      let reply: string;
+      
+      // Check if user is from Firebase and has getIdToken method
+      if (isFirebaseEnabled && user && typeof (user as any).getIdToken === 'function') {
+        // Firebase user - try to get token first, fallback to session
+        try {
+          console.log('Firebase user detected, attempting to get ID token...');
+          const idToken = await (user as any).getIdToken();
+          console.log('Got Firebase ID token, making authenticated request');
+          reply = await callChat(text, idToken);
+        } catch (tokenError) {
+          console.error('Failed to get Firebase ID token, falling back to session:', tokenError);
+          console.log('Using session-based authentication as fallback');
+          reply = await callChat(text);
+        }
+      } else {
+        // Backend user or no Firebase - use session-based authentication
+        console.log('Using session-based authentication');
+        reply = await callChat(text);
+      }
       
       const aiMsg: Msg = { role: "ai", content: reply, id: (Date.now() + 1).toString() };
       
@@ -295,7 +370,14 @@ export default function ChatPage() {
             <button 
               onClick={async () => {
                 try {
-                  await logout();
+                  // Handle both Firebase and backend logout
+                  if (isFirebaseEnabled && auth && user && typeof (user as any).getIdToken === 'function') {
+                    console.log('Logging out Firebase user');
+                    await signOut(auth);
+                  } else {
+                    console.log('Logging out backend user');
+                    await logout();
+                  }
                   router.push("/login");
                 } catch (error) {
                   console.error("Logout error:", error);
