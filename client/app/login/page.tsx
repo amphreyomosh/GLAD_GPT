@@ -15,17 +15,37 @@ export default function LoginPage() {
 
   async function doGoogle() {
     if (!isFirebaseEnabled) {
-      setError("Google sign-in is not available. Please use email/password or demo login.");
+      setError("Google sign-in requires Firebase configuration. Please check your environment variables or use email/password login.");
+      return;
+    }
+    
+    if (!auth || !googleProvider) {
+      setError("Firebase authentication not properly initialized. Please check your configuration.");
       return;
     }
     
     try {
       setLoading(true);
       setError(null);
-      await signInWithPopup(auth, googleProvider);
+      console.log('Attempting Google sign-in...');
+      const result = await signInWithPopup(auth, googleProvider);
+      console.log('Google sign-in successful:', result.user.uid);
       router.push("/chat");
     } catch (e: any) {
-      setError(e.message);
+      console.error('Google sign-in error:', e);
+      let errorMessage = 'Google sign-in failed. ';
+      
+      if (e.code === 'auth/popup-closed-by-user') {
+        errorMessage += 'Sign-in was cancelled.';
+      } else if (e.code === 'auth/popup-blocked') {
+        errorMessage += 'Popup was blocked by browser. Please allow popups and try again.';
+      } else if (e.code === 'auth/unauthorized-domain') {
+        errorMessage += 'This domain is not authorized for Google sign-in.';
+      } else {
+        errorMessage += e.message || 'Please try again or use email/password login.';
+      }
+      
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }
