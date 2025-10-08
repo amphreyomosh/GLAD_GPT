@@ -82,13 +82,15 @@ The "auth/admin-restricted-operation" error occurs when:
 
 ## Troubleshooting
 
-### "Failed to fetch" or "Chat request failed"
-- Check that NEXT_PUBLIC_API_URL in Vercel is set to just the domain (without `/api`)
+### "Failed to fetch" or "Chat request failed" or 404 errors
+- **CRITICAL:** Set NEXT_PUBLIC_API_URL in Vercel to: `https://your-render-app.onrender.com` (NO `/api` at the end!)
+- **Current Issue:** If you see `domain.com/api/api/chat/session` (double `/api/`), your Vercel NEXT_PUBLIC_API_URL still has `/api` at the end
 - Verify the Render server is running and accessible
 - Check that OPENAI_API_KEY is set in Render
 - Verify the API key has access to GPT models
 - Check server logs for detailed error messages
 - Ensure CORS_ORIGIN in Render matches your Vercel domain
+- Redeploy Vercel after changing environment variables
 
 ### "Firebase: Error (auth/admin-restricted-operation)"
 - **Most Common Cause:** Anonymous authentication is NOT enabled in Firebase Console
