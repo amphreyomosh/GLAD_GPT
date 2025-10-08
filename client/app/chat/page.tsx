@@ -22,6 +22,24 @@ export default function ChatPage() {
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [hasUsedDemoChat, setHasUsedDemoChat] = useState(false);
 
+  // Random welcome messages
+  const welcomeMessages = [
+    "Ready to explore ideas together?",
+    "What's on your mind today?",
+    "Let's dive into something interesting!",
+    "Ready to get creative?",
+    "What would you like to discover?",
+    "Let's start something amazing!",
+    "Ready to brainstorm?",
+    "What can I help you with today?",
+    "Let's make something happen!",
+    "Ready for an adventure in ideas?"
+  ];
+
+  const getRandomWelcomeMessage = () => {
+    return welcomeMessages[Math.floor(Math.random() * welcomeMessages.length)];
+  };
+
   useEffect(() => {
     const initializeAuth = async () => {
       if (isFirebaseEnabled && auth) {
@@ -357,13 +375,8 @@ export default function ChatPage() {
               <div className="flex-1 min-w-0">
                 <div 
                   className={`text-sm font-medium ${isDarkMode ? 'text-gray-200' : 'text-gray-900'}`}
-                  title={user.isAnonymous ? 'Guest User' : (user.email || 'User')}
                 >
-                  {user.isAnonymous ? 'Guest User' : (
-                    user.email && user.email.length > 20 
-                      ? `${user.email.substring(0, 18)}...` 
-                      : (user.email || 'User')
-                  )}
+                  {user.isAnonymous ? 'Guest User' : 'User'}
                 </div>
               </div>
             </div>
@@ -436,7 +449,7 @@ export default function ChatPage() {
             <div className="flex flex-col items-center justify-center h-full p-8">
               <div className="text-center max-w-md">
                 <h2 className={`text-2xl font-semibold mb-2 ${isDarkMode ? 'text-gray-100' : 'text-gray-900'}`}>
-                  Hey, {user.isAnonymous ? 'there' : (user.email?.split('@')[0] || 'User')}. Ready to dive in?
+                  {getRandomWelcomeMessage()}
                 </h2>
                 <p className={`mb-8 ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
                   Ask me anything or try one of these suggestions
