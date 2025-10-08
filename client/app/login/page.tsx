@@ -81,17 +81,47 @@ export default function LoginPage() {
     try {
       setLoading(true);
       setError(null);
-      
-      if (isFirebaseEnabled) {
-        await signInAnonymously(auth);
+
+      if (isFirebaseEnabled && auth) {
+        try {
+          console.log('Attempting Firebase anonymous authentication...');
+          await signInAnonymously(auth);
+          console.log('Firebase anonymous authentication successful');
+        } catch (firebaseError: any) {
+          console.warn('Firebase anonymous auth failed, falling back to backend auth:', firebaseError.message);
+
+          // Check if it's a configuration issue or permission issue
+          if (firebaseError.code === 'auth/admin-restricted-operation' ||
+              firebaseError.code === 'auth/operation-not-allowed' ||
+              firebaseError.message.includes('admin-restricted')) {
+            console.log('Firebase admin restriction detected, using backend fallback');
+            // Use backend demo authentication as fallback
+            await loginAsDemo();
+          } else {
+            // Re-throw other Firebase errors
+            throw firebaseError;
+          }
+        }
       } else {
+        console.log('Firebase not enabled, using backend demo authentication');
         // Use backend demo authentication
         await loginAsDemo();
       }
-      
+
       router.push("/chat");
     } catch (e: any) {
-      setError(e.message);
+      console.error('Guest authentication failed:', e);
+      let errorMessage = 'Guest sign-in failed. ';
+
+      if (e.message.includes('admin-restricted')) {
+        errorMessage += 'Firebase anonymous authentication is not enabled. Please check Firebase Console or try again later.';
+      } else if (e.message.includes('network') || e.message.includes('fetch')) {
+        errorMessage += 'Network error. Please check your connection and try again.';
+      } else {
+        errorMessage += e.message || 'Please try again or contact support.';
+      }
+
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }

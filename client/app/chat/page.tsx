@@ -39,8 +39,48 @@ export default function ChatPage() {
               const anonymousUser = await signInAsGuest();
               console.log('Anonymous sign-in successful:', anonymousUser.uid);
               // The auth state change will trigger again with the anonymous user
-            } catch (error) {
+            } catch (error: any) {
               console.error('Anonymous sign-in failed:', error);
+
+              // Check if it's an admin restriction error - try backend fallback
+              if (error.message.includes('admin-restricted') ||
+                  error.message.includes('not configured') ||
+                  error.code === 'auth/admin-restricted-operation') {
+                console.log('Firebase admin restriction detected, trying backend auth fallback...');
+
+                try {
+                  const { getCurrentUser } = await import("@/lib/api");
+                  const backendUser = await getCurrentUser();
+
+                  if (backendUser) {
+                    console.log('Backend authentication successful, using demo user');
+                    const demoUser = {
+                      uid: backendUser.id,
+                      email: backendUser.email,
+                      displayName: backendUser.firstName ? `${backendUser.firstName} ${backendUser.lastName}` : backendUser.email,
+                      isAnonymous: backendUser.id === 'demo_user'
+                    } as User;
+
+                    // Manually set the user state since we're not using Firebase auth
+                    setUser(demoUser);
+                    setAuthChecked(true);
+
+                    if (chatSessions.length === 0) {
+                      const initialChat: ChatSession = {
+                        id: Date.now().toString(),
+                        title: "New Chat",
+                        messages: []
+                      };
+                      setChatSessions([initialChat]);
+                      setCurrentChat(initialChat);
+                    }
+                    return;
+                  }
+                } catch (backendError) {
+                  console.error('Backend auth fallback also failed:', backendError);
+                }
+              }
+
               router.push("/login");
             }
             return;

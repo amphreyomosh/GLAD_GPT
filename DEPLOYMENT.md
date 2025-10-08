@@ -6,7 +6,7 @@
 Set these environment variables in your Vercel dashboard:
 
 ```
-NEXT_PUBLIC_API_URL=https://your-render-app-url.onrender.com/api
+NEXT_PUBLIC_API_URL=https://your-render-app-url.onrender.com
 NEXT_PUBLIC_WS_URL=wss://your-render-app-url.onrender.com
 NEXT_PUBLIC_FIREBASE_API_KEY=your-firebase-api-key
 NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=your-project.firebaseapp.com
@@ -38,6 +38,36 @@ FIREBASE_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\nYOUR-PRIVATE-KEY\n-----END PR
 
 ## Getting Firebase Configuration
 
+### Step-by-Step Firebase Setup:
+
+1. **Create/Access Firebase Project:**
+   - Go to [Firebase Console](https://console.firebase.google.com/)
+   - Create a new project or select existing one
+
+2. **Enable Authentication:**
+   - Go to **Authentication** → **Sign-in method**
+   - Find **Anonymous** in the provider list
+   - Click on it and toggle **Enable**
+   - Click **Save**
+
+3. **Get Firebase Configuration:**
+   - Go to **Project Settings** (gear icon) → **General**
+   - Scroll down to "Your apps" section
+   - If no app exists, click "Add app" → Web app (</>) → Register app
+   - Copy the config values from the SDK setup
+
+4. **Verify Configuration:**
+   - Run `node test-firebase-config.cjs` locally to verify config
+   - Check that all environment variables are set in Vercel
+
+### Important: Anonymous Authentication
+The "auth/admin-restricted-operation" error occurs when:
+- Anonymous authentication is **not enabled** in Firebase Console
+- Firebase environment variables are missing in Vercel
+- The Firebase project has domain restrictions
+
+**Solution:** Ensure anonymous auth is enabled in Firebase Console → Authentication → Sign-in method.
+
 1. Go to [Firebase Console](https://console.firebase.google.com/)
 2. Select your project
 3. Go to Project Settings > General
@@ -52,15 +82,21 @@ FIREBASE_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\nYOUR-PRIVATE-KEY\n-----END PR
 
 ## Troubleshooting
 
-### "Chat request failed"
+### "Failed to fetch" or "Chat request failed"
+- Check that NEXT_PUBLIC_API_URL in Vercel is set to just the domain (without `/api`)
+- Verify the Render server is running and accessible
 - Check that OPENAI_API_KEY is set in Render
 - Verify the API key has access to GPT models
 - Check server logs for detailed error messages
+- Ensure CORS_ORIGIN in Render matches your Vercel domain
 
 ### "Firebase: Error (auth/admin-restricted-operation)"
+- **Most Common Cause:** Anonymous authentication is NOT enabled in Firebase Console
+- **Solution:** Go to Firebase Console → Authentication → Sign-in method → Enable "Anonymous"
 - Ensure all NEXT_PUBLIC_FIREBASE_* variables are set in Vercel
 - Verify Firebase project is properly configured
-- Check that anonymous authentication is enabled in Firebase Console > Authentication > Sign-in method
+- Check browser console for detailed error messages
+- The app will automatically fallback to backend authentication if Firebase fails
 
 ### Guest mode not working
 - Firebase anonymous authentication must be enabled
