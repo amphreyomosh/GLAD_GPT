@@ -375,8 +375,13 @@ export default function ChatPage() {
               <div className="flex-1 min-w-0">
                 <div 
                   className={`text-sm font-medium ${isDarkMode ? 'text-gray-200' : 'text-gray-900'}`}
+                  title={user.isAnonymous ? 'Guest User' : (user.email || 'User')}
                 >
-                  {user.isAnonymous ? 'Guest User' : 'User'}
+                  {user.isAnonymous ? 'Guest User' : (
+                    user.email && user.email.length > 20 
+                      ? `${user.email.substring(0, 18)}...` 
+                      : (user.email || 'User')
+                  )}
                 </div>
               </div>
             </div>
