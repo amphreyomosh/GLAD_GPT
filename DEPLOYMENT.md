@@ -27,14 +27,20 @@ CORS_ORIGIN=https://your-vercel-app-url.vercel.app
 USE_MOCK_STORAGE=false
 ```
 
-### Optional Firebase Admin (Server-side)
-If you want server-side Firebase operations:
+### Firebase Admin Credentials (REQUIRED for Firebase Authentication)
+**CRITICAL:** These are required for the server to validate Firebase ID tokens!
+
+1. **Go to Firebase Console** → Your Project → **Project Settings** → **Service accounts**
+2. **Click "Generate new private key"** → Download the JSON file
+3. **Add these to Render environment variables:**
 
 ```
 FIREBASE_PROJECT_ID=your-project-id
-FIREBASE_CLIENT_EMAIL=your-service-account@your-project.iam.gserviceaccount.com
-FIREBASE_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\nYOUR-PRIVATE-KEY\n-----END PRIVATE KEY-----"
+FIREBASE_CLIENT_EMAIL=firebase-adminsdk-xxxxx@your-project.iam.gserviceaccount.com
+FIREBASE_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\nYOUR-PRIVATE-KEY-CONTENT\n-----END PRIVATE KEY-----"
 ```
+
+**Note:** Copy the entire private key including the `-----BEGIN PRIVATE KEY-----` and `-----END PRIVATE KEY-----` lines, and replace literal `\n` with actual newlines if needed.
 
 ## Getting Firebase Configuration
 
@@ -91,6 +97,11 @@ The "auth/admin-restricted-operation" error occurs when:
 - Check server logs for detailed error messages
 - Ensure CORS_ORIGIN in Render matches your Vercel domain
 - Redeploy Vercel after changing environment variables
+
+### "Failed to validate chat attempts" or "Invalid or expired Firebase ID token"
+- **CRITICAL:** Firebase Admin credentials are missing in Render
+- **Solution:** Add Firebase service account credentials to Render (see Firebase Admin Credentials section above)
+- This is required for the server to validate Firebase authentication tokens
 
 ### "Firebase: Error (auth/admin-restricted-operation)"
 - **Most Common Cause:** Anonymous authentication is NOT enabled in Firebase Console
