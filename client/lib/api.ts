@@ -1,6 +1,6 @@
 import { auth } from "./firebase";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5006';
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://glad-gpt.onrender.com';
 
 // API_URL configured from environment
 
