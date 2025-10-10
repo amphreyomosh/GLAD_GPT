@@ -40,11 +40,11 @@ export function getSession() {
     secret: process.env.SESSION_SECRET || "your-session-secret-change-in-production",
     store: sessionStore,
     resave: false,
-    saveUninitialized: false,
+    saveUninitialized: true, // Allow saving uninitialized sessions for demo auth
     cookie: {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production" && process.env.CORS_ORIGIN?.includes('https'),
-      sameSite: process.env.NODE_ENV === "production" ? 'none' : 'lax',
+      secure: false, // Allow HTTP in development
+      sameSite: 'lax', // Allow cross-origin in development
       maxAge: sessionTtl,
     },
   });

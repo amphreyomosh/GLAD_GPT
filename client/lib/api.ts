@@ -1,6 +1,4 @@
-import { auth } from "./firebase";
-
-// Normalize the public API URL to ensure we don't end up with /api/api
+ // Normalize the public API URL to ensure we don't end up with /api/api
 function normalizeBaseUrl(url: string) {
   let base = (url || '').trim();
   if (!base) return 'https://glad-gpt.onrender.com';
