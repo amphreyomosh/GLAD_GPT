@@ -87,15 +87,15 @@ export class EnhancedOpenAIService {
 private getModelsToTry(mode: AIMode): string[] {
   switch (mode) {
     case "fast":
-      return ["gpt-4o-mini", "gpt-3.5-turbo"];
+      return ["gpt-4.1-nano-2025-04-14", "gpt-4.1-mini-2025-04-14"];
     case "auto":
     case "expert":
-      return ["gpt-4o-mini", "gpt-4o", "gpt-3.5-turbo"];
+      return ["gpt-4.1-nano-2025-04-14", "gpt-4.1-mini-2025-04-14"];
     case "heavy":
     case "code_architect":
-      return ["gpt-4o", "gpt-4o-mini"];
+      return ["gpt-4.1-nano-2025-04-14", "gpt-4.1-mini-2025-04-14"];
     default:
-      return ["gpt-4o-mini", "gpt-3.5-turbo"];
+      return ["gpt-4.1-nano-2025-04-14", "gpt-4.1-mini-2025-04-14"];
   }
 }
 
