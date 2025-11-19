@@ -1,8 +1,21 @@
 import OpenAI from "openai";
 
-const openai = new OpenAI({
- apiKey: process.env.OPENAI_API_KEY
-});
+// Lazy initialization of OpenAI client to avoid build-time errors
+let openai: OpenAI | null = null;
+
+function getOpenAIClient(): OpenAI {
+  if (!openai) {
+    const apiKey = process.env.OPENAI_API_KEY;
+    if (!apiKey) {
+      // During build time, API key might not be available
+      // Create a dummy client that will fail gracefully
+      openai = new OpenAI({ apiKey: 'dummy-key-for-build' });
+    } else {
+      openai = new OpenAI({ apiKey });
+    }
+  }
+  return openai;
+}
 
 export type AIMode = "fast" | "auto" | "expert" | "heavy" | "code_architect" | "research_assistant" | "academic_writer";
 
@@ -184,7 +197,7 @@ async generateResponse(
    try {
      console.log(`Attempting to use model: ${model}`);
 
-     const response = await openai.chat.completions.create({
+     const response = await getOpenAIClient().chat.completions.create({
        model,
        messages: conversationMessages,
        temperature: this.getTemperature(mode),
