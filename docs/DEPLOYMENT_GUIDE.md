@@ -38,16 +38,23 @@ FIREBASE_CLIENT_EMAIL=firebase-adminsdk-fbsvc@gladgpt-2a500.iam.gserviceaccount.
 FIREBASE_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\n[your-private-key]\n-----END PRIVATE KEY-----"
 ```
 
-### For Frontend (Vercel)
+### For Frontend (Vercel) - **REQUIRED VALUES YOU MUST PROVIDE**
 ```env
-NEXT_PUBLIC_API_URL=https://your-render-app-url.onrender.com
-NEXT_PUBLIC_FIREBASE_API_KEY=your-firebase-api-key
+NEXT_PUBLIC_API_URL=https://glad-gpt.onrender.com
+NEXT_PUBLIC_FIREBASE_API_KEY=[GET_FROM_FIREBASE_CONSOLE]
 NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=gladgpt-2a500.firebaseapp.com
 NEXT_PUBLIC_FIREBASE_PROJECT_ID=gladgpt-2a500
 NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=gladgpt-2a500.appspot.com
-NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=your-messaging-sender-id
-NEXT_PUBLIC_FIREBASE_APP_ID=your-app-id
+NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=[GET_FROM_FIREBASE_CONSOLE]
+NEXT_PUBLIC_FIREBASE_APP_ID=[GET_FROM_FIREBASE_CONSOLE]
 ```
+
+**🔑 IMPORTANT**: You need to get these values from your Firebase Console:
+1. Go to [Firebase Console](https://console.firebase.google.com)
+2. Select your project (gladgpt-2a500)
+3. Go to Project Settings > General > Your apps
+4. Copy the config values for your web app
+5. Also add your Vercel domain to Authorized domains in Authentication > Sign-in method > Google
 
 ## How It Works Now
 
@@ -88,8 +95,27 @@ NEXT_PUBLIC_FIREBASE_APP_ID=your-app-id
 ## Expected User Experience
 
 1. **Visit the app** → Clean login page
-2. **Click "Continue as Guest"** → Instant demo login
-3. **Send a message** → AI responds immediately
-4. **No errors** → Smooth experience
+2. **Click "Continue as Guest"** → Instant demo login (if session cookies work)
+3. **Or use Google Sign-in** → Firebase authentication
+4. **Send a message** → AI responds immediately
+5. **No errors** → Smooth experience
+
+## ⚠️ Known Issues & Solutions
+
+### Session Cookies Don't Work Across Domains
+**Problem**: Frontend (Vercel) and backend (Render) are on different domains, so session cookies can't be shared.
+
+**Solutions**:
+1. **Recommended**: Use Firebase authentication (already configured)
+2. **Alternative**: Move both services to the same domain/platform
+3. **Advanced**: Implement JWT token-based authentication
+
+### Firebase Auth Not Persisting
+**Problem**: User signs in but immediately becomes unauthenticated.
+
+**Solutions**:
+1. ✅ **Add your Vercel domain to Firebase authorized domains**
+2. ✅ **Set correct Firebase config in Vercel environment variables**
+3. ✅ **Ensure Firebase project settings are correct**
 
 The application is now production-ready with simplified, reliable authentication!

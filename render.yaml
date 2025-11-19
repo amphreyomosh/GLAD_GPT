@@ -22,4 +22,32 @@ services:
       - key: FIREBASE_CLIENT_EMAIL
         value: firebase-adminsdk-fbsvc@gladgpt-2a500.iam.gserviceaccount.com
       - key: FIREBASE_PRIVATE_KEY
-        value: "-----BEGIN PRIVATE KEY-----\nMIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgEAAoIBAQCq7v6TI3mpi1mf\nG6pcId4wY3wFABX9lJfAGNjSlES5AjPN9i5/XqTgrFWN1hxHftDQW56ZY7YndZUG\nZBTfP2J+hIu4+SElNOSfMzkr5J3Jc/zve7vrb27juVKQI/d0lA8yEoejJ4WICjXh\njns9pj5m0NPhsd4P9ZF4bU5YGfDMCS8jXkg0SqnAkR2Xb/bB7JSfDSIo9D2chgx5\nVLDxFlTjFWRbk1uS0MP12yOAikxOi52r0VC1vyBYq2Btt3wKtpllhqlsczRNGMvt\ntIiq9HZObYUPvTaCc9O6UuwzXpPh2L7LpDr4z7ZuTniTydwMR8RbwBvt5LOI9/rJ\nJUMl9NK/AgMBAAECggEADsDW/ysiLpSE9TsljpMrwsBrbWEPBNaE7IMYf8BlWBSN\nFRtI8xxfnbayIa5XvYIAEuO9gh69k5VN+gG8XXJylVnqV1pFVplEnEsHBbdTORaG\nP8NNumnhR81wh1lbW9gFobxAsb/RAidjdCbgkzccjrI6f3HjKTx4RE0m5GrEwk9q\ndB9jqoQuq0wgZ1UwyOF2yiM0MSdaLJeENv09+jvKhV2jjZiGl2mFLbA7b52Frp3Y\nTmU18PTspCY3UjVOjrd0tvlCP1kCaU+HBUFhwWDJVL3eyeJXHI4twYV2dxzb1SxR\nWSDRfJbBziib4zzCL+Lqot62d9nkGkckb20NKXsM2QKBgQDdIrJMvXMI5JgmEibI\nd7U0W9o0CemMb2U9AJ8KV3i3UX9h5aHmn3JWeHFGWrmxtKyzjgRccUUdvAlKqa6L\nnW9lyFGNMzXr2hSfoue9wjQDajZhjwjbT00KJgiIa+PAyPD/k0C8aoaNKXF5TbPh\nfpBKHfCjWgnxX92gxWPmBqiDyQKBgQDF4hWw7dqsw1D7481fhusQWwE46n7gVllp\n9VQZcUdpJzklARthLQWmkrBNQgMkrQlBrdrg2CiQiVweNbGaO4oSq3Ez0hXlqPGO\nn9InuIzp2Zfl8NjhHzmZu5wOzfWoCH4XiwWIw/7gIuyEuRQ3k7Vq0Xhs2lmG+n/D\nsDAJkz0WRwKBgQDSzOJ/ORHR5mgL0r3Z2BOK6AyoEtLqJr6xWkhByYSv7CasIgUm\nHdUXDRWeZZojBwKi37zUir3CTJ/m5r4XJWst8bmcCrdaL7f9PYQAZoLCxps0gO+G\ncKAWDo+PzJl+C4+BctQBSOMe6eTcJ/BUAxx1KvlcHtbfm+1f9wr2Gl7F0QKBgH5G\nWKswDXRjqyEibGMCOKyWNkB4u4Ay+hn4mLMnq3c5tWicvTkUvt9eCi0y68iSty53\nYA5NQg2B6gvJHc2bIu/pAXMdJCYK2iK2cCgyx5FO7nSobe2yvFIS+3IjEhkpWjVx\n3JU65UFoZ+AGLxWMJ5/DjgKAj9LntXJN00m48KlvAoGBALVPfe76rL+KuYIKr6pd\nrJwlsFrB8lythZZPYwoz7mf+eLk6INDSae85BK9otR9UKlA0cQ1rtCBySDp4nLxa\n5sghJ9WjVW+6Avs0YQOH4XFIL5FCJExHuxk7j5SD6p9b/NqA4C794s49oGstRALN\nwrKSPlui9G1Q/twiigi5u8rJ\n-----END PRIVATE KEY-----\n"
+        value: |
+          -----BEGIN PRIVATE KEY-----
+          MIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgEAAoIBAQCq7v6TI3mpi1mf
+          G6pcId4wY3wFABX9lJfAGNjSlES5AjPN9i5/XqTgrFWN1hxHftDQW56ZY7YndZUG
+          ZBTfP2J+hIu4+SElNOSfMzkr5J3Jc/zve7vrb27juVKQI/d0lA8yEoejJ4WICjXh
+          jns9pj5m0NPhsd4P9ZF4bU5YGfDMCS8jXkg0SqnAkR2Xb/bB7JSfDSIo9D2chgx5
+          VLDxFlTjFWRbk1uS0MP12yOAikxOi52r0VC1vyBYq2Btt3wKtpllhqlsczRNGMvt
+          tIiq9HZObYUPvTaCc9O6UuwzXpPh2L7LpDr4z7ZuTniTydwMR8RbwBvt5LOI9/rJ
+          JUMl9NK/AgMBAAECggEADsDW/ysiLpSE9TsljpMrwsBrbWEPBNaE7IMYf8BlWBSN
+          FRtI8xxfnbayIa5XvYIAEuO9gh69k5VN+gG8XXJylVnqV1pFVplEnEsHBbdTORaG
+          P8NNumnhR81wh1lbW9gFobxAsb/RAidjdCbgkzccjrI6f3HjKTx4RE0m5GrEwk9q
+          dB9jqoQuq0wgZ1UwyOF2yiM0MSdaLJeENv09+jvKhV2jjZiGl2mFLbA7b52Frp3Y
+          TmU18PTspCY3UjVOjrd0tvlCP1kCaU+HBUFhwWDJVL3eyeJXHI4twYV2dxzb1SxR
+          WSDRfJbBziib4zzCL+Lqot62d9nkGkckb20NKXsM2QKBgQDdIrJMvXMI5JgmEibI
+          d7U0W9o0CemMb2U9AJ8KV3i3UX9h5aHmn3JWeHFGWrmxtKyzjgRccUUdvAlKqa6L
+          nW9lyFGNMzXr2hSfoue9wjQDajZhjwjbT00KJgiIa+PAyPD/k0C8aoaNKXF5TbPh
+          fpBKHfCjWgnxX92gxWPmBqiDyQKBgQDF4hWw7dqsw1D7481fhusQWwE46n7gVllp
+          9VQZcUdpJzklARthLQWmkrBNQgMkrQlBrdrg2CiQiVweNbGaO4oSq3Ez0hXlqPGO
+          n9InuIzp2Zfl8NjhHzmZu5wOzfWoCH4XiwWIw/7gIuyEuRQ3k7Vq0Xhs2lmG+n/D
+          sDAJkz0WRwKBgQDSzOJ/ORHR5mgL0r3Z2BOK6AyoEtLqJr6xWkhByYSv7CasIgUm
+          HdUXDRWeZZojBwKi37zUir3CTJ/m5r4XJWst8bmcCrdaL7f9PYQAZoLCxps0gO+G
+          cKAWDo+PzJl+C4+BctQBSOMe6eTcJ/BUAxx1KvlcHtbfm+1f9wr2Gl7F0QKBgH5G
+          WKswDXRjqyEibGMCOKyWNkB4u4Ay+hn4mLMnq3c5tWicvTkUvt9eCi0y68iSty53
+          YA5NQg2B6gvJHc2bIu/pAXMdJCYK2iK2cCgyx5FO7nSobe2yvFIS+3IjEhkpWjVx
+          3JU65UFoZ+AGLxWMJ5/DjgKAj9LntXJN00m48KlvAoGBALVPfe76rL+KuYIKr6pd
+          rJwlsFrB8lythZZPYwoz7mf+eLk6INDSae85BK9otR9UKlA0cQ1rtCBySDp4nLxa
+          5sghJ9WjVW+6Avs0YQOH4XFIL5FCJExHuxk7j5SD6p9b/NqA4C794s49oGstRALN
+          wrKSPlui9G1Q/twiigi5u8rJ
+          -----END PRIVATE KEY-----
