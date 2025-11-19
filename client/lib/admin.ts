@@ -1,8 +1,12 @@
+// Firebase Admin SDK configuration for server-side operations
+// Used for validating Firebase ID tokens and managing Firebase services
+
 import admin from "firebase-admin";
 
 let isInitialized = false;
 let initializationError: string | null = null;
 
+// Initialize Firebase Admin only once
 function ensureInitialized() {
   if (isInitialized) return;
   if (admin.apps.length) {
@@ -31,9 +35,13 @@ function ensureInitialized() {
     }
 
     admin.initializeApp({
-      credential: admin.credential.cert({ projectId, clientEmail, privateKey }),
+      credential: admin.credential.cert({
+        projectId,
+        clientEmail,
+        privateKey,
+      }),
     });
-    
+
     isInitialized = true;
     console.log("Firebase Admin initialized successfully");
   } catch (error) {
@@ -42,19 +50,13 @@ function ensureInitialized() {
   }
 }
 
+// Check if Firebase Admin is available
 export function isFirebaseAdminAvailable(): boolean {
   ensureInitialized();
   return isInitialized && admin.apps.length > 0;
 }
 
-export function getAdminApp() {
-  ensureInitialized();
-  if (!isFirebaseAdminAvailable()) {
-    throw new Error(initializationError || "Firebase Admin is not initialized");
-  }
-  return admin.app();
-}
-
+// Get Firebase Admin Auth instance
 export function getAdminAuth() {
   ensureInitialized();
   if (!isFirebaseAdminAvailable()) {
@@ -63,10 +65,26 @@ export function getAdminAuth() {
   return admin.auth();
 }
 
+// Get Firebase Admin Firestore instance
 export function getAdminDb() {
   ensureInitialized();
   if (!isFirebaseAdminAvailable()) {
     throw new Error(initializationError || "Firebase Admin is not initialized");
   }
   return admin.firestore();
+}
+
+// Verify Firebase ID token - used in API routes for authentication
+export async function verifyFirebaseToken(token: string) {
+  try {
+    if (!isFirebaseAdminAvailable()) {
+      throw new Error("Firebase Admin not configured");
+    }
+
+    const decoded = await getAdminAuth().verifyIdToken(token);
+    return decoded;
+  } catch (error) {
+    console.error("Firebase token verification failed:", error);
+    throw error;
+  }
 }

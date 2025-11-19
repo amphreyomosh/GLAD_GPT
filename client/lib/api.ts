@@ -1,15 +1,6 @@
- // Normalize the public API URL to ensure we don't end up with /api/api
-function normalizeBaseUrl(url: string) {
-  let base = (url || '').trim();
-  if (!base) return 'https://glad-gpt.onrender.com';
-  // remove trailing slash
-  if (base.endsWith('/')) base = base.slice(0, -1);
-  // remove trailing /api (case-insensitive)
-  if (base.toLowerCase().endsWith('/api')) base = base.slice(0, -4);
-  return base;
-}
-
-const BASE_URL = normalizeBaseUrl(process.env.NEXT_PUBLIC_API_URL || 'https://glad-gpt.onrender.com');
+ // API calls are now made to local Next.js API routes
+ // No external API URL needed since we're using Next.js API routes
+ const BASE_URL = '';
 
 // API_URL configured from environment
 
@@ -156,18 +147,18 @@ export async function getCurrentUser() {
 }
 
 // Smart chat function - implements Firebase auth priority with session fallback
+// Now calls local Next.js API routes instead of external backend
 export async function callChat(message: string, token?: string) {
   // Firebase authentication flow: Try /api/chat with Bearer token first
   if (token) {
     try {
       console.log('Attempting Firebase-authenticated chat request to /api/chat...');
-      const response = await fetch(`${BASE_URL}/api/chat`, {
+      const response = await fetch('/api/chat', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`, // Firebase ID token
         },
-        credentials: 'include',
         body: JSON.stringify({ message }),
       });
 
@@ -176,10 +167,10 @@ export async function callChat(message: string, token?: string) {
         return result.reply || result;
       }
 
-      // Check if Firebase admin is not configured on backend
+      // Check if Firebase admin is not configured
       const error = await response.json().catch(() => ({}));
       if (error.code === 'FIREBASE_ADMIN_NOT_CONFIGURED' || response.status === 503) {
-        console.log('Firebase admin not configured on backend, falling back to session auth');
+        console.log('Firebase admin not configured, falling back to session auth');
         // Fall through to session-based auth
       } else {
         throw new Error(error.message || 'Firebase chat request failed');
@@ -196,12 +187,11 @@ export async function callChat(message: string, token?: string) {
 
   // Session-based authentication fallback: Use /api/chat/session
   console.log('Using session-based authentication, making request to /api/chat/session...');
-  const response = await fetch(`${BASE_URL}/api/chat/session`, {
+  const response = await fetch('/api/chat/session', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
     },
-    credentials: 'include', // Sends session cookies
     body: JSON.stringify({ message }),
   });
 
