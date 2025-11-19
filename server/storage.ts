@@ -10,11 +10,11 @@ import type {
   InsertFileUpload,
   ConversationWithMessages,
   MessageWithFiles
-} from "../shared/schema.js";
+} from "../shared/schema.ts";
 
 // Import database and schema
 import { db } from "./db.js";
-import { users, conversations, messages, fileUploads } from "../shared/schema.js";
+import { users, conversations, messages, fileUploads } from "../shared/schema.ts";
 import { eq, desc, and, or, ilike } from "drizzle-orm";
 
 export interface IStorage {

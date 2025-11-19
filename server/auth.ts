@@ -11,7 +11,7 @@ import connectPg from "connect-pg-simple";
 const pgSession = connectPg(session);
 
 // Import the User type from the shared schema
-import type { User } from "../shared/schema.js";
+import type { User } from "../shared/schema.ts";
 
 declare global {
   namespace Express {
@@ -43,15 +43,15 @@ export function getSession() {
     saveUninitialized: true, // Allow saving uninitialized sessions for demo auth
     cookie: {
       httpOnly: true,
-      secure: false, // Allow HTTP in development
-      sameSite: 'lax', // Allow cross-origin in development
+      secure: process.env.NODE_ENV === "production", // ✅ UPDATED - Auto-detect HTTPS
+      sameSite: process.env.NODE_ENV === "production" ? 'none' : 'lax', // ✅ UPDATED - Allow cross-origin
       maxAge: sessionTtl,
     },
   });
 }
 
 export async function setupAuth(app: Express) {
-  app.set("trust proxy", 1);
+  app.set("trust proxy", 1); // ✅ Important for Render/proxy setups
   app.use(getSession());
 
   // Initialize Passport

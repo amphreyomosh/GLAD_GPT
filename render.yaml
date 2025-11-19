@@ -7,6 +7,8 @@ services:
     envVars:
       - key: NODE_ENV
         value: production
+      - key: OPENAI_API_KEY
+        value: your-openai-api-key-here
       - key: CORS_ORIGIN
         value: https://glad-gpt-y76m.vercel.app,https://glad-gpt.onrender.com
       - key: BASE_URL

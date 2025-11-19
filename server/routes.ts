@@ -4,7 +4,7 @@ import { WebSocketServer, WebSocket } from "ws";
 import { storage } from "./storage.js";
 import { setupAuth, isAuthenticated } from "./auth.js";
 import { enhancedOpenAIService } from "./openai.js";
-import { insertConversationSchema, insertMessageSchema } from "../shared/schema.js";
+import { insertConversationSchema, insertMessageSchema } from "../shared/schema.ts";
 import multer from "multer";
 import fs from "node:fs/promises";
 import path from "node:path";
