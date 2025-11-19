@@ -130,25 +130,33 @@ export async function setupAuth(app: Express) {
         userId: (req.session as any).userId,
         cookie: req.session.cookie
       });
-      
+
       const demoUser = await storage.upsertUser({
         id: 'demo_user',
         email: 'demo@gladgpt.com',
         firstName: 'Demo',
         lastName: 'User',
       });
-      
+
       // Set user in session
       (req.session as any).userId = demoUser.id;
       req.user = demoUser;
-      
-      console.log('Demo login successful, session after:', {
-        sessionId: (req.session as any).id,
-        userId: (req.session as any).userId,
-        cookie: req.session.cookie
+
+      // Ensure session is saved
+      req.session.save((saveErr) => {
+        if (saveErr) {
+          console.error('Session save error:', saveErr);
+          return res.status(500).json({ message: 'Session save failed' });
+        }
+
+        console.log('Demo login successful, session after:', {
+          sessionId: (req.session as any).id,
+          userId: (req.session as any).userId,
+          cookie: req.session.cookie
+        });
+
+        res.json({ user: demoUser, success: true });
       });
-      
-      res.json({ user: demoUser, success: true });
     } catch (error) {
       console.error('Demo login error:', error);
       res.status(500).json({ message: 'Demo login failed' });
@@ -190,7 +198,15 @@ export async function setupAuth(app: Express) {
       (req.session as any).userId = user.id;
       req.user = user;
 
-      res.json({ user, success: true });
+      // Ensure session is saved
+      req.session.save((saveErr) => {
+        if (saveErr) {
+          console.error('Session save error:', saveErr);
+          return res.status(500).json({ message: 'Session save failed' });
+        }
+
+        res.json({ user, success: true });
+      });
     } catch (error) {
       console.error('Signup error:', error);
       res.status(500).json({ message: 'Signup failed' });
@@ -221,7 +237,15 @@ export async function setupAuth(app: Express) {
       (req.session as any).userId = user.id;
       req.user = user;
 
-      res.json({ user, success: true });
+      // Ensure session is saved
+      req.session.save((saveErr) => {
+        if (saveErr) {
+          console.error('Session save error:', saveErr);
+          return res.status(500).json({ message: 'Session save failed' });
+        }
+
+        res.json({ user, success: true });
+      });
     } catch (error) {
       console.error('Login error:', error);
       res.status(500).json({ message: 'Login failed' });

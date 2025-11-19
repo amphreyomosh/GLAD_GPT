@@ -155,17 +155,17 @@ export async function getCurrentUser() {
   return response.json();
 }
 
-// Smart chat function - tries Firebase token first, falls back to session
+// Smart chat function - implements Firebase auth priority with session fallback
 export async function callChat(message: string, token?: string) {
-  // Try Firebase endpoint first if token is provided
+  // Firebase authentication flow: Try /api/chat with Bearer token first
   if (token) {
     try {
-      console.log('Making Firebase token-based chat request...');
+      console.log('Attempting Firebase-authenticated chat request to /api/chat...');
       const response = await fetch(`${BASE_URL}/api/chat`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
+          Authorization: `Bearer ${token}`, // Firebase ID token
         },
         credentials: 'include',
         body: JSON.stringify({ message }),
@@ -176,10 +176,10 @@ export async function callChat(message: string, token?: string) {
         return result.reply || result;
       }
 
-      // Check if it's a Firebase admin configuration error
+      // Check if Firebase admin is not configured on backend
       const error = await response.json().catch(() => ({}));
       if (error.code === 'FIREBASE_ADMIN_NOT_CONFIGURED' || response.status === 503) {
-        console.log('Firebase admin not configured, falling back to session auth');
+        console.log('Firebase admin not configured on backend, falling back to session auth');
         // Fall through to session-based auth
       } else {
         throw new Error(error.message || 'Firebase chat request failed');
@@ -194,14 +194,14 @@ export async function callChat(message: string, token?: string) {
     }
   }
 
-  // Use session-based endpoint as fallback or primary method
-  console.log('Making session-based chat request...');
+  // Session-based authentication fallback: Use /api/chat/session
+  console.log('Using session-based authentication, making request to /api/chat/session...');
   const response = await fetch(`${BASE_URL}/api/chat/session`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
     },
-    credentials: 'include',
+    credentials: 'include', // Sends session cookies
     body: JSON.stringify({ message }),
   });
 

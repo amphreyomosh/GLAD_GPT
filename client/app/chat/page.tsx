@@ -40,19 +40,20 @@ export default function ChatPage() {
     return welcomeMessages[Math.floor(Math.random() * welcomeMessages.length)];
   };
 
+  // Firebase authentication initialization with session fallback
   useEffect(() => {
     const initializeAuth = async () => {
       if (isFirebaseEnabled && auth) {
-        // Use Firebase authentication if available
+        // Firebase auth flow: Check Firebase authentication state first
         console.log('Initializing Firebase authentication...');
         const unsubscribe = onAuthStateChanged(auth, async (firebaseUser: User | null) => {
           console.log('Firebase auth state changed:', firebaseUser?.uid, firebaseUser?.isAnonymous);
-          
+
           if (firebaseUser) {
-            // Firebase user is logged in
+            // Firebase user authenticated - use Firebase auth
             setUser(firebaseUser);
             setAuthChecked(true);
-            
+
             if (chatSessions.length === 0) {
               const initialChat: ChatSession = {
                 id: Date.now().toString(),
@@ -63,23 +64,23 @@ export default function ChatPage() {
               setCurrentChat(initialChat);
             }
           } else {
-            // No Firebase user, check backend session
+            // No Firebase user - fallback to backend session authentication
             console.log('No Firebase user, checking backend session...');
             try {
               const userData = await getCurrentUser();
-              
+
               if (userData) {
-                console.log('Backend authentication successful:', userData.id);
+                console.log('Backend session authentication successful:', userData.id);
                 const backendUser = {
                   uid: userData.id,
                   email: userData.email,
                   displayName: userData.firstName ? `${userData.firstName} ${userData.lastName}` : userData.email,
                   isAnonymous: userData.id === 'demo_user'
                 } as User;
-                
+
                 setUser(backendUser);
                 setAuthChecked(true);
-                
+
                 if (chatSessions.length === 0) {
                   const initialChat: ChatSession = {
                     id: Date.now().toString(),
@@ -102,27 +103,27 @@ export default function ChatPage() {
             }
           }
         });
-        
+
         return unsubscribe;
       } else {
-        // Firebase not available, use backend authentication only
+        // Firebase not available - use backend session authentication only
         console.log('Firebase not available, using backend authentication...');
-        
+
         try {
           const userData = await getCurrentUser();
-          
+
           if (userData) {
-            console.log('Backend authentication successful:', userData.id);
+            console.log('Backend session authentication successful:', userData.id);
             const backendUser = {
               uid: userData.id,
               email: userData.email,
               displayName: userData.firstName ? `${userData.firstName} ${userData.lastName}` : userData.email,
               isAnonymous: userData.id === 'demo_user'
             } as User;
-            
+
             setUser(backendUser);
             setAuthChecked(true);
-            
+
             if (chatSessions.length === 0) {
               const initialChat: ChatSession = {
                 id: Date.now().toString(),
@@ -203,61 +204,62 @@ export default function ChatPage() {
     );
   };
 
+  // Chat sending logic with Firebase auth priority and session fallback
   async function send() {
     if (!currentChat) return;
-    
+
     setError(null);
     const text = input.trim();
     if (!text) return;
 
     const userMsg: Msg = { role: "user", content: text, id: Date.now().toString() };
     const updatedMessages = [...currentChat.messages, userMsg];
-    
+
     // Update current chat with user message
     const updatedChat = { ...currentChat, messages: updatedMessages };
     setCurrentChat(updatedChat);
-    setChatSessions(prev => 
+    setChatSessions(prev =>
       prev.map(chat => chat.id === currentChat.id ? updatedChat : chat)
     );
-    
+
     // Update title if this is the first message
     if (currentChat.messages.length === 0) {
       updateChatTitle(currentChat.id, text);
     }
-    
+
     setInput("");
-    
+
     try {
       setBusy(true);
-      
+
       let reply: string;
-      
-      // Check if user is from Firebase and has getIdToken method
+
+      // Firebase authentication flow: Try Firebase token first, fallback to session
       if (isFirebaseEnabled && user && typeof (user as any).getIdToken === 'function') {
-        // Firebase user - try to get token first, fallback to session
+        // Firebase user detected - attempt Firebase authentication
         try {
           console.log('Firebase user detected, attempting to get ID token...');
           const idToken = await (user as any).getIdToken();
-          console.log('Got Firebase ID token, making authenticated request');
-          reply = await callChat(text, idToken);
+          console.log('Got Firebase ID token, making authenticated request to /api/chat');
+          reply = await callChat(text, idToken); // Calls /api/chat with Bearer token
         } catch (tokenError) {
           console.error('Failed to get Firebase ID token, falling back to session:', tokenError);
-          console.log('Using session-based authentication as fallback');
-          reply = await callChat(text);
+          console.log('Using session-based authentication as fallback to /api/chat/session');
+          reply = await callChat(text); // Calls /api/chat/session without token
         }
       } else {
-        // Backend user or no Firebase - use session-based authentication
-        console.log('Using session-based authentication');
-        reply = await callChat(text);
+        // Backend session user or no Firebase - use session-based authentication
+        console.log('Using session-based authentication to /api/chat/session');
+        reply = await callChat(text); // Calls /api/chat/session
       }
-      
+
       const aiMsg: Msg = { role: "ai", content: reply, id: (Date.now() + 1).toString() };
-      
+
       const finalMessages = [...updatedMessages, aiMsg];
       const finalChat = { ...currentChat, messages: finalMessages };
-      
+
       setCurrentChat(finalChat);
-      setChatSessions(prev => 
+      setChatSessions(prev =>
         prev.map(chat => chat.id === currentChat.id ? finalChat : chat)
       );
 

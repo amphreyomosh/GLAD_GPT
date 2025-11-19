@@ -157,7 +157,7 @@ export async function registerRoutes(app: Express): Promise<void> {
 
   // Auth routes are now handled in auth.ts
 
-  // Firebase-secured chat proxy
+  // Firebase-authenticated chat endpoint - handles Firebase users
   app.post('/api/chat', verifyFirebaseToken, enforceChatAttempts, async (req: any, res) => {
     try {
       const { message, mode, fileAnalyses } = req.body || {};
@@ -165,6 +165,7 @@ export async function registerRoutes(app: Express): Promise<void> {
         return res.status(400).json({ message: 'Message is required' });
       }
 
+      // Firebase user authenticated via verifyFirebaseToken middleware
       const uid: string = req.firebaseUser.uid;
       const isAnonymous: boolean = !!req.isAnonymous;
 
@@ -172,13 +173,14 @@ export async function registerRoutes(app: Express): Promise<void> {
         { role: 'user' as const, content: message }
       ];
 
+      // Generate AI response using OpenAI service
       const response = await enhancedOpenAIService.generateResponse(messages, mode || 'auto', fileAnalyses);
       const ai = response.mainResponse;
 
-      // Record chat (optional)
+      // Record chat for analytics (optional)
       await recordChat(uid, message, ai, mode);
 
-      // Increment attempts if anonymous
+      // Track anonymous user attempts for rate limiting
       if (isAnonymous) {
         await incrementAnonymousAttempt(uid);
       }
@@ -190,53 +192,54 @@ export async function registerRoutes(app: Express): Promise<void> {
     }
   });
 
-  // Session-based chat endpoint for backend authentication
+  // Session-based chat endpoint - handles backend-authenticated users (fallback from Firebase)
   app.post('/api/chat/session', isAuthenticated, enforceSessionChatAttempts, async (req: any, res) => {
     try {
-      console.log('Chat session request received:', { user: req.user?.id, body: req.body });
-      
+      console.log('Session-based chat request received:', { user: req.user?.id, body: req.body });
+
       const { message, mode, fileAnalyses } = req.body || {};
       if (!message || typeof message !== 'string') {
         console.log('Invalid message:', message);
         return res.status(400).json({ message: 'Message is required' });
       }
 
-      // Check OpenAI API key
+      // Check OpenAI API key configuration
       if (!process.env.OPENAI_API_KEY) {
         console.error('OpenAI API key not configured');
         return res.status(500).json({ message: 'OpenAI API key not configured' });
       }
 
+      // Session-authenticated user (from isAuthenticated middleware)
       const user = req.user;
       const uid: string = user.id;
       const isAnonymous: boolean = user.id === 'demo_user';
 
-      console.log('Processing chat for user:', { uid, isAnonymous });
+      console.log('Processing session-based chat for user:', { uid, isAnonymous });
 
       const messages = [
         { role: 'user' as const, content: message }
       ];
 
-      // Use faster model for simple queries to improve response time
+      // Use faster model for session-based auth to improve response time
       const selectedMode = mode || 'fast'; // Default to fast mode for better response times
-      
-      console.log('Calling OpenAI with mode:', selectedMode);
+
+      console.log('Calling OpenAI service with mode:', selectedMode);
       const response = await enhancedOpenAIService.generateResponse(messages, selectedMode, fileAnalyses);
       const ai = response.mainResponse;
 
       console.log('OpenAI response received, length:', ai?.length || 0);
 
-      // Record chat (optional) - skip if Firebase not configured
+      // Record chat for analytics (optional) - skip if Firebase not configured
       try {
         await recordChat(uid, message, ai, mode);
       } catch (error) {
         console.log('Chat recording skipped (Firebase not configured)');
       }
 
-      // For demo users, we don't increment per message - they can chat unlimited within their first session
+      // For demo users, unlimited messages within their first session
       if (isAnonymous) {
         console.log('Demo user message processed - no limits on messages within first chat');
-        
+
         // Still try Firebase tracking if available (for analytics)
         try {
           await incrementAnonymousAttempt(uid);
@@ -249,7 +252,7 @@ export async function registerRoutes(app: Express): Promise<void> {
     } catch (err: any) {
       console.error('POST /api/chat/session error:', err);
       const errorMessage = err?.message || 'Failed to process chat';
-      return res.status(500).json({ 
+      return res.status(500).json({
         message: errorMessage,
         details: process.env.NODE_ENV === 'development' ? err?.stack : undefined
       });
