@@ -99,20 +99,20 @@ export default function LoginPage() {
   return (
     <div className="min-h-screen bg-slate-900 text-white flex items-center justify-center p-6 relative">
       {/* Simplified Background */}
-      <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-purple-900/20 to-slate-900"></div>
+      <div className="absolute inset-0 bg-slate-900"></div>
 
       <div className="w-full max-w-md relative z-10">
         {/* Header */}
         <div className="text-center mb-8">
           <Link href="/" className="inline-flex items-center space-x-3 mb-6">
-            <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center shadow-2xl">
+            <div className="w-12 h-12 bg-blue-600 rounded-2xl flex items-center justify-center shadow-2xl">
               <span className="text-2xl font-bold text-white">G</span>
             </div>
-            <span className="text-3xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
+            <span className="text-3xl font-bold text-white">
               GLAD GPT
             </span>
           </Link>
-          <h1 className="text-4xl font-bold mb-3 bg-gradient-to-r from-white to-blue-200 bg-clip-text text-transparent">
+          <h1 className="text-4xl font-bold mb-3 text-white">
             Welcome Back
           </h1>
           <p className="text-white/70 text-lg">
@@ -183,7 +183,7 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full p-4 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 disabled:from-gray-600 disabled:to-gray-700 disabled:cursor-not-allowed rounded-xl font-semibold text-lg transition-all duration-300 shadow-lg hover:shadow-xl"
+              className="w-full p-4 bg-blue-600 hover:bg-blue-700 disabled:bg-slate-700 disabled:cursor-not-allowed rounded-xl font-semibold text-lg transition-all duration-300 shadow-lg hover:shadow-xl"
             >
               {loading ? 'Please wait...' : 'Sign In'}
             </button>
