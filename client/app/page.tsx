@@ -10,7 +10,7 @@ export default function LandingPage() {
           <Link href="/login" className="px-6 py-2 text-white hover:text-blue-400 transition-colors font-medium">
             Login
           </Link>
-          <Link href="/signup" className="px-6 py-2 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white rounded-lg font-semibold transition-all duration-300 shadow-lg hover:shadow-xl">
+          <Link href="/signup" className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold transition-all duration-300 shadow-lg hover:shadow-xl">
             Sign Up
           </Link>
         </div>
@@ -23,7 +23,7 @@ export default function LandingPage() {
             🚀 Powered by Advanced AI Technology
           </div>
           
-          <h1 className="text-6xl md:text-7xl font-bold mb-6 bg-gradient-to-r from-white via-blue-200 to-purple-400 bg-clip-text text-transparent">
+          <h1 className="text-6xl md:text-7xl font-bold mb-6 text-white">
             GLAD GPT
           </h1>
           
@@ -37,7 +37,7 @@ export default function LandingPage() {
           </p>
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-            <Link href="/signup" className="px-8 py-4 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white rounded-lg font-semibold text-lg transition-all duration-300 shadow-lg hover:shadow-xl">
+            <Link href="/signup" className="px-8 py-4 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold text-lg transition-all duration-300 shadow-lg hover:shadow-xl">
               Get Started Free
             </Link>
             <Link href="#features" className="px-8 py-4 bg-slate-900 bg-opacity-50 hover:bg-opacity-70 text-white rounded-lg font-semibold text-lg border border-slate-800 hover:border-slate-600 transition-all duration-300">
@@ -49,7 +49,7 @@ export default function LandingPage() {
 
       {/* Features Section */}
       <div id="features" className="max-w-6xl mx-auto px-6 py-20">
-        <h2 className="text-4xl font-bold text-center mb-4 bg-gradient-to-r from-white to-blue-200 bg-clip-text text-transparent">
+        <h2 className="text-4xl font-bold text-center mb-4 text-white">
           Why Choose GLAD GPT?
         </h2>
         <p className="text-gray-400 text-center mb-12 max-w-2xl mx-auto">
@@ -58,7 +58,7 @@ export default function LandingPage() {
         
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
           <div className="bg-slate-900 rounded-xl p-6 border border-slate-800 hover:border-blue-500 transition-all duration-300 hover:shadow-lg">
-            <div className="w-12 h-12 bg-gradient-to-br from-slate-800 to-blue-900 rounded-lg flex items-center justify-center mb-4 text-2xl">
+            <div className="w-12 h-12 bg-slate-800 rounded-lg flex items-center justify-center mb-4 text-2xl">
               💬
             </div>
             <h3 className="text-xl font-semibold mb-3">Natural Conversations</h3>
@@ -67,8 +67,8 @@ export default function LandingPage() {
             </p>
           </div>
 
-          <div className="bg-slate-900 rounded-xl p-6 border border-slate-800 hover:border-purple-500 transition-all duration-300 hover:shadow-lg">
-            <div className="w-12 h-12 bg-gradient-to-br from-slate-800 to-purple-900 rounded-lg flex items-center justify-center mb-4 text-2xl">
+          <div className="bg-slate-900 rounded-xl p-6 border border-slate-800 hover:border-blue-500 transition-all duration-300 hover:shadow-lg">
+            <div className="w-12 h-12 bg-slate-800 rounded-lg flex items-center justify-center mb-4 text-2xl">
               ⚡
             </div>
             <h3 className="text-xl font-semibold mb-3">Lightning Fast</h3>
@@ -77,8 +77,8 @@ export default function LandingPage() {
             </p>
           </div>
 
-          <div className="bg-slate-900 rounded-xl p-6 border border-slate-800 hover:border-green-500 transition-all duration-300 hover:shadow-lg">
-            <div className="w-12 h-12 bg-gradient-to-br from-slate-800 to-green-900 rounded-lg flex items-center justify-center mb-4 text-2xl">
+          <div className="bg-slate-900 rounded-xl p-6 border border-slate-800 hover:border-blue-500 transition-all duration-300 hover:shadow-lg">
+            <div className="w-12 h-12 bg-slate-800 rounded-lg flex items-center justify-center mb-4 text-2xl">
               🔒
             </div>
             <h3 className="text-xl font-semibold mb-3">Secure & Private</h3>
@@ -87,8 +87,8 @@ export default function LandingPage() {
             </p>
           </div>
 
-          <div className="bg-slate-900 rounded-xl p-6 border border-slate-800 hover:border-yellow-500 transition-all duration-300 hover:shadow-lg">
-            <div className="w-12 h-12 bg-gradient-to-br from-slate-800 to-yellow-900 rounded-lg flex items-center justify-center mb-4 text-2xl">
+          <div className="bg-slate-900 rounded-xl p-6 border border-slate-800 hover:border-blue-500 transition-all duration-300 hover:shadow-lg">
+            <div className="w-12 h-12 bg-slate-800 rounded-lg flex items-center justify-center mb-4 text-2xl">
               🧠
             </div>
             <h3 className="text-xl font-semibold mb-3">Smart Learning</h3>
@@ -97,8 +97,8 @@ export default function LandingPage() {
             </p>
           </div>
 
-          <div className="bg-slate-900 rounded-xl p-6 border border-slate-800 hover:border-red-500 transition-all duration-300 hover:shadow-lg">
-            <div className="w-12 h-12 bg-gradient-to-br from-slate-800 to-red-900 rounded-lg flex items-center justify-center mb-4 text-2xl">
+          <div className="bg-slate-900 rounded-xl p-6 border border-slate-800 hover:border-blue-500 transition-all duration-300 hover:shadow-lg">
+            <div className="w-12 h-12 bg-slate-800 rounded-lg flex items-center justify-center mb-4 text-2xl">
               🎯
             </div>
             <h3 className="text-xl font-semibold mb-3">Multi-Purpose</h3>
@@ -107,8 +107,8 @@ export default function LandingPage() {
             </p>
           </div>
 
-          <div className="bg-slate-900 rounded-xl p-6 border border-slate-800 hover:border-indigo-500 transition-all duration-300 hover:shadow-lg">
-            <div className="w-12 h-12 bg-gradient-to-br from-slate-800 to-indigo-900 rounded-lg flex items-center justify-center mb-4 text-2xl">
+          <div className="bg-slate-900 rounded-xl p-6 border border-slate-800 hover:border-blue-500 transition-all duration-300 hover:shadow-lg">
+            <div className="w-12 h-12 bg-slate-800 rounded-lg flex items-center justify-center mb-4 text-2xl">
               🌐
             </div>
             <h3 className="text-xl font-semibold mb-3">Always Available</h3>
@@ -121,8 +121,8 @@ export default function LandingPage() {
 
       {/* AI Models Section */}
       <div className="max-w-6xl mx-auto px-6 py-20">
-        <div className="bg-gradient-to-r from-slate-900 to-slate-800 rounded-2xl p-12 border border-slate-700">
-          <h2 className="text-4xl font-bold text-center mb-4 bg-gradient-to-r from-white to-blue-200 bg-clip-text text-transparent">
+        <div className="bg-slate-900 rounded-2xl p-12 border border-slate-700">
+          <h2 className="text-4xl font-bold text-center mb-4 text-white">
             Powered by Custom AI Models
           </h2>
           <p className="text-gray-300 text-center mb-12 max-w-2xl mx-auto">
@@ -132,10 +132,10 @@ export default function LandingPage() {
           <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
             <div className="bg-slate-800 rounded-xl p-6 border border-slate-600">
               <div className="flex items-center gap-3 mb-4">
-                <div className="w-8 h-8 bg-gradient-to-br from-green-500 to-green-600 rounded-lg flex items-center justify-center">
+                <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
                   <span className="text-white font-bold text-sm">F</span>
                 </div>
-                <h3 className="text-xl font-semibold text-green-400">Fast Mode</h3>
+                <h3 className="text-xl font-semibold text-blue-400">Fast Mode</h3>
               </div>
               <p className="text-gray-300 mb-3">
                 <strong>Model:</strong> gpt-4.1-nano-2025-04-14
@@ -147,10 +147,10 @@ export default function LandingPage() {
 
             <div className="bg-slate-800 rounded-xl p-6 border border-slate-600">
               <div className="flex items-center gap-3 mb-4">
-                <div className="w-8 h-8 bg-gradient-to-br from-purple-500 to-purple-600 rounded-lg flex items-center justify-center">
+                <div className="w-8 h-8 bg-blue-700 rounded-lg flex items-center justify-center">
                   <span className="text-white font-bold text-sm">E</span>
                 </div>
-                <h3 className="text-xl font-semibold text-purple-400">Expert Mode</h3>
+                <h3 className="text-xl font-semibold text-blue-400">Expert Mode</h3>
               </div>
               <p className="text-gray-300 mb-3">
                 <strong>Model:</strong> gpt-4.1-mini-2025-04-14
@@ -165,7 +165,7 @@ export default function LandingPage() {
 
       {/* Use Cases Section */}
       <div className="max-w-6xl mx-auto px-6 py-20">
-        <h2 className="text-4xl font-bold text-center mb-4 bg-gradient-to-r from-white to-purple-200 bg-clip-text text-transparent">
+        <h2 className="text-4xl font-bold text-center mb-4 text-white">
           Endless Possibilities
         </h2>
         <p className="text-gray-300 text-center mb-12 max-w-2xl mx-auto">
@@ -185,7 +185,7 @@ export default function LandingPage() {
             "Problem-solving and brainstorming"
           ].map((useCase, index) => (
             <div key={index} className="flex items-center gap-3 p-4 bg-slate-900 rounded-lg border border-slate-700 hover:border-slate-600 transition-colors">
-              <div className="w-6 h-6 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full flex items-center justify-center flex-shrink-0 text-xs">
+              <div className="w-6 h-6 bg-blue-600 rounded-full flex items-center justify-center flex-shrink-0 text-xs">
                 ✓
               </div>
               <span className="text-gray-200">{useCase}</span>
@@ -197,7 +197,7 @@ export default function LandingPage() {
       {/* Authentication Options */}
       <div className="max-w-4xl mx-auto px-6 py-20">
         <div className="bg-slate-900 rounded-2xl p-12 border border-slate-800 text-center">
-          <h2 className="text-4xl font-bold mb-4 bg-gradient-to-r from-white to-blue-200 bg-clip-text text-transparent">
+          <h2 className="text-4xl font-bold mb-4 text-white">
             Multiple Ways to Get Started
           </h2>
           <p className="text-gray-300 mb-8 max-w-2xl mx-auto">
@@ -206,7 +206,7 @@ export default function LandingPage() {
           
           <div className="grid md:grid-cols-3 gap-6 mb-8">
             <div className="bg-slate-800 rounded-xl p-6 border border-slate-700">
-              <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg flex items-center justify-center mx-auto mb-4">
+              <div className="w-12 h-12 bg-blue-600 rounded-lg flex items-center justify-center mx-auto mb-4">
                 📧
               </div>
               <h3 className="text-lg font-semibold mb-2">Email & Password</h3>
@@ -214,7 +214,7 @@ export default function LandingPage() {
             </div>
             
             <div className="bg-slate-800 rounded-xl p-6 border border-slate-700">
-              <div className="w-12 h-12 bg-gradient-to-br from-red-500 to-red-600 rounded-lg flex items-center justify-center mx-auto mb-4">
+              <div className="w-12 h-12 bg-blue-600 rounded-lg flex items-center justify-center mx-auto mb-4">
                 🔍
               </div>
               <h3 className="text-lg font-semibold mb-2">Google OAuth</h3>
@@ -222,7 +222,7 @@ export default function LandingPage() {
             </div>
             
             <div className="bg-slate-800 rounded-xl p-6 border border-slate-700">
-              <div className="w-12 h-12 bg-gradient-to-br from-green-500 to-green-600 rounded-lg flex items-center justify-center mx-auto mb-4">
+              <div className="w-12 h-12 bg-blue-600 rounded-lg flex items-center justify-center mx-auto mb-4">
                 👤
               </div>
               <h3 className="text-lg font-semibold mb-2">Guest Access</h3>
@@ -231,7 +231,7 @@ export default function LandingPage() {
           </div>
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link href="/signup" className="px-8 py-4 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white rounded-lg font-semibold text-lg transition-all duration-300 shadow-lg hover:shadow-xl">
+            <Link href="/signup" className="px-8 py-4 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold text-lg transition-all duration-300 shadow-lg hover:shadow-xl">
               Create Account
             </Link>
             <Link href="/login" className="px-8 py-4 bg-slate-800 hover:bg-slate-700 text-white rounded-lg font-semibold text-lg border border-slate-700 hover:border-slate-600 transition-all duration-300">
@@ -246,10 +246,10 @@ export default function LandingPage() {
         <div className="max-w-6xl mx-auto px-6 py-8">
           <div className="flex flex-col md:flex-row justify-between items-center">
             <div className="flex items-center space-x-3 mb-4 md:mb-0">
-              <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
+              <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
                 <span className="text-white font-bold text-sm">G</span>
               </div>
-              <span className="text-xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
+              <span className="text-xl font-bold text-blue-400">
                 GLAD GPT
               </span>
             </div>

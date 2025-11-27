@@ -278,10 +278,10 @@ export default function ChatPage() {
   if (!authChecked) {
     return (
       <div className="min-h-screen bg-slate-900 flex items-center justify-center relative">
-        <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-purple-900/20 to-slate-900"></div>
+        <div className="absolute inset-0 bg-slate-900"></div>
         <div className="text-center relative z-10">
           <div className="glass-card p-12 rounded-3xl max-w-md mx-auto">
-            <div className="w-20 h-20 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-6 shadow-2xl animate-pulse">
+            <div className="w-20 h-20 bg-blue-600 rounded-full flex items-center justify-center mx-auto mb-6 shadow-2xl animate-pulse">
               <svg className="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
               </svg>
@@ -298,18 +298,18 @@ export default function ChatPage() {
     return (
       <div className="min-h-screen bg-slate-900 flex items-center justify-center relative">
         {/* Simplified Background */}
-        <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-purple-900/20 to-slate-900"></div>
+        <div className="absolute inset-0 bg-slate-900"></div>
         
         <div className="text-center relative z-10">
           <div className="glass-card p-12 rounded-3xl max-w-md mx-auto">
-            <div className="w-20 h-20 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-6 shadow-2xl">
+            <div className="w-20 h-20 bg-blue-600 rounded-full flex items-center justify-center mx-auto mb-6 shadow-2xl">
               <svg className="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
               </svg>
             </div>
             <h2 className="text-3xl font-bold mb-4 text-white">Please sign in to continue</h2>
             <p className="text-white/70 mb-6">Access your chat history and enjoy unlimited conversations</p>
-            <Link href="/login" className="inline-block px-8 py-3 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white rounded-xl font-semibold transition-all duration-300 shadow-lg hover:shadow-xl">
+            <Link href="/login" className="inline-block px-8 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-semibold transition-all duration-300 shadow-lg hover:shadow-xl">
               Sign In
             </Link>
           </div>
@@ -369,7 +369,7 @@ export default function ChatPage() {
         <div className={`p-4 border-t ${isDarkMode ? 'border-gray-700' : 'border-gray-200'}`}>
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
-              <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center">
+              <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center">
                 <span className="text-sm font-bold text-white">
                   {user.isAnonymous ? 'G' : (user.email?.[0]?.toUpperCase() || 'U')}
                 </span>
@@ -487,8 +487,8 @@ export default function ChatPage() {
                   <div className="flex items-start gap-4">
                     <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
                       msg.role === 'user' 
-                        ? 'bg-green-500' 
-                        : 'bg-purple-500'
+                        ? 'bg-blue-600' 
+                        : 'bg-blue-700'
                     }`}>
                       <span className="text-sm font-bold text-white">
                         {msg.role === 'user' ? 'U' : 'AI'}
@@ -508,7 +508,7 @@ export default function ChatPage() {
               
               {busy && (
                 <div className="flex items-start gap-4">
-                  <div className="w-8 h-8 bg-purple-500 rounded-full flex items-center justify-center flex-shrink-0">
+                  <div className="w-8 h-8 bg-blue-700 rounded-full flex items-center justify-center flex-shrink-0">
                     <span className="text-sm font-bold text-white">AI</span>
                   </div>
                   <div className="flex-1 space-y-2">

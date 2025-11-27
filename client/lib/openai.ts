@@ -6,11 +6,20 @@ let openai: OpenAI | null = null;
 function getOpenAIClient(): OpenAI {
   if (!openai) {
     const apiKey = process.env.OPENAI_API_KEY;
-    if (!apiKey) {
-      // During build time, API key might not be available
-      // Create a dummy client that will fail gracefully
+    
+    // Check if we're in a runtime environment (not build time)
+    const isRuntime = typeof window === 'undefined' && process.env.NODE_ENV !== undefined;
+    
+    if (!apiKey || apiKey === 'dummy-key-for-build') {
+      if (isRuntime) {
+        console.error('❌ OPENAI_API_KEY is not set in environment variables!');
+        console.error('Please set OPENAI_API_KEY in your .env file (backend) or .env.local (frontend)');
+        throw new Error('OpenAI API key is not configured. Please add OPENAI_API_KEY to your environment variables.');
+      }
+      // During build time, create a dummy client
       openai = new OpenAI({ apiKey: 'dummy-key-for-build' });
     } else {
+      console.log('✅ OpenAI client initialized successfully');
       openai = new OpenAI({ apiKey });
     }
   }
@@ -195,7 +204,7 @@ async generateResponse(
  // Try models in order
  for (const model of modelsToTry) {
    try {
-     console.log(`Attempting to use model: ${model}`);
+     console.log(`🔄 Attempting to use model: ${model}`);
 
      const response = await getOpenAIClient().chat.completions.create({
        model,
@@ -210,7 +219,7 @@ async generateResponse(
      const mainResponse = response.choices[0].message.content ||
        "I apologize, but I couldn't generate a response. Please try again.";
 
-     console.log(`Successfully used model: ${model}`);
+     console.log(`✅ Successfully used model: ${model}`);
 
      // Extract code snippets from response
      const codeSnippets = this.extractCodeFromResponse(mainResponse);
@@ -227,7 +236,17 @@ async generateResponse(
      };
 
    } catch (error: any) {
-     console.log(`Model ${model} failed:`, error.message);
+     console.error(`❌ Model ${model} failed:`, error.message);
+
+     // Check if it's an API key error
+     if (error.message?.includes('API key') || error.message?.includes('Incorrect API key')) {
+       throw new Error('Invalid OpenAI API key. Please check your OPENAI_API_KEY environment variable.');
+     }
+
+     // Check if it's a network/fetch error
+     if (error.message?.includes('fetch') || error.code === 'ENOTFOUND' || error.code === 'ECONNREFUSED') {
+       throw new Error('Network error: Could not connect to OpenAI API. Please check your internet connection.');
+     }
 
      if (!this.isModelAccessError(error)) {
        console.error("OpenAI API error:", error);
